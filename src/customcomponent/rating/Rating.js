@@ -9,7 +9,7 @@ export default class Rating extends Field {
     static schema(...extend) {
         return Field.schema({
             type: 'rating',
-            label: 'rating',
+            label: 'Rating',
             key: 'rating',
             icon: 'bi bi-star',
             iconSize: '2rem',
@@ -23,8 +23,7 @@ export default class Rating extends Field {
             title: 'Rating',
             icon: 'star',
             group: 'basic',
-            documentation: '/userguide/#rating',
-            weight: 0,
+            weight: -1,
             schema: Rating.schema()
         };
     }
