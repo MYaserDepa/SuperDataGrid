@@ -261,9 +261,10 @@ export default class DataPager extends Component {
     }
 
     getCurrentPageData() {
+        const dataArray = Array.isArray(this.data) ? this.data : this.getSampleData();
         const startIndex = (this.currentPage - 1) * this.itemsPerPage;
         const endIndex = startIndex + this.itemsPerPage;
-        return this.data.slice(startIndex, endIndex);
+        return dataArray.slice(startIndex, endIndex);
     }
 
     updateTable() {
@@ -311,9 +312,16 @@ export default class DataPager extends Component {
     }
 
     setValue(value) {
-        // Optionally allow external value setting
-        super.setValue(value);
+        if (Array.isArray(value)) {
+            this.data = value;
+            this.totalItems = value.length;
+        } else {
+            this.data = this.getSampleData();
+            this.totalItems = this.data.length;
+        }
+        this.currentPage = 1;
         this.updateDisplay();
+        super.setValue(value);
     }
 
     get defaultSchema() {
