@@ -65,10 +65,18 @@ export default class DataPager extends Component {
     }
 
     attach(element) {
-        this.loadRefs(element, { dataPager: 'single' });
-        this.container = this.refs.dataPager;
+        this.loadRefs(element, {
+            dataPager: 'single',
+            itemsPerPage: 'single',
+            pageInfo: 'single',
+            tableBody: 'single',
+            firstBtn: 'single',
+            prevBtn: 'single',
+            nextBtn: 'single',
+            lastBtn: 'single'
+        });
         this.injectStyles();
-        this.renderPager();
+        this.attachPager();
         return super.attach(element);
     }
 
@@ -181,84 +189,38 @@ export default class DataPager extends Component {
         }
     }
 
-    renderPager() {
-        if (!this.container) return;
-        this.container.innerHTML = `
-        <div class="container">
-            <div class="table-container">
-                <table class="data-table" id="dataTable">
-                    <thead>
-                        <tr>
-                            <th>Project</th>
-                            <th>Department</th>
-                            <th>Line Manager</th>
-                            <th>Business Phone #</th>
-                            <th>Business Fax #</th>
-                            <th>Email Distribution Group</th>
-                            <th>Remarks</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody"></tbody>
-                </table>
-            </div>
-            <div class="pager">
-                <div class="pager-left">
-                    <div class="items-per-page">
-                        Items per page:
-                        <select id="itemsPerPage">
-                            ${this.component.pageSizeOptions.map(opt => `<option value="${opt}" ${opt === this.itemsPerPage ? 'selected' : ''}>${opt}</option>`).join('')}
-                        </select>
-                    </div>
-                </div>
-                <div class="pager-right">
-                    <div class="page-info" id="pageInfo"></div>
-                    <div class="nav-controls">
-                        <button class="nav-btn" id="firstBtn" title="First page">⇤</button>
-                        <button class="nav-btn" id="prevBtn" title="Previous page">‹</button>
-                        <button class="nav-btn" id="nextBtn" title="Next page">›</button>
-                        <button class="nav-btn" id="lastBtn" title="Last page">⇥</button>
-                    </div>
-                </div>
-            </div>
-        </div>`;
-        this.initializeElements();
+    attachPager() {
         this.bindEvents();
         this.updateDisplay();
     }
 
-    initializeElements() {
-        this.itemsPerPageSelect = this.container.querySelector('#itemsPerPage');
-        this.pageInfo = this.container.querySelector('#pageInfo');
-        this.tableBody = this.container.querySelector('#tableBody');
-        this.firstBtn = this.container.querySelector('#firstBtn');
-        this.prevBtn = this.container.querySelector('#prevBtn');
-        this.nextBtn = this.container.querySelector('#nextBtn');
-        this.lastBtn = this.container.querySelector('#lastBtn');
-    }
-
     bindEvents() {
-        this.itemsPerPageSelect.addEventListener('change', () => {
-            this.itemsPerPage = parseInt(this.itemsPerPageSelect.value);
+        this.addEventListener(this.refs.itemsPerPage, 'change', () => {
+            this.itemsPerPage = parseInt(this.refs.itemsPerPage.value);
             this.currentPage = 1;
             this.updateDisplay();
         });
-        this.firstBtn.addEventListener('click', () => {
+
+        this.addEventListener(this.refs.firstBtn, 'click', () => {
             this.currentPage = 1;
             this.updateDisplay();
         });
-        this.prevBtn.addEventListener('click', () => {
+
+        this.addEventListener(this.refs.prevBtn, 'click', () => {
             if (this.currentPage > 1) {
                 this.currentPage--;
                 this.updateDisplay();
             }
         });
-        this.nextBtn.addEventListener('click', () => {
+
+        this.addEventListener(this.refs.nextBtn, 'click', () => {
             if (this.currentPage < this.getTotalPages()) {
                 this.currentPage++;
                 this.updateDisplay();
             }
         });
-        this.lastBtn.addEventListener('click', () => {
+
+        this.addEventListener(this.refs.lastBtn, 'click', () => {
             this.currentPage = this.getTotalPages();
             this.updateDisplay();
         });
@@ -277,11 +239,11 @@ export default class DataPager extends Component {
 
     updateTable() {
         const currentData = this.getCurrentPageData();
-        this.tableBody.innerHTML = '';
+        this.refs.tableBody.innerHTML = '';
         if (currentData.length === 0) {
             const row = document.createElement('tr');
             row.innerHTML = '<td colspan="7" class="sample-data">No data available</td>';
-            this.tableBody.appendChild(row);
+            this.refs.tableBody.appendChild(row);
             return;
         }
         currentData.forEach(item => {
@@ -295,22 +257,23 @@ export default class DataPager extends Component {
                 <td>${item.emailGroup}</td>
                 <td>${item.remarks}</td>
             `;
-            this.tableBody.appendChild(row);
+            this.refs.tableBody.appendChild(row);
         });
     }
 
     updatePageInfo() {
         const startItem = (this.currentPage - 1) * this.itemsPerPage + 1;
         const endItem = Math.min(this.currentPage * this.itemsPerPage, this.totalItemsNum);
-        this.pageInfo.textContent = `${startItem}-${endItem} / ${this.totalItemsNum}`;
+        this.refs.pageInfo.textContent = `${startItem}-${endItem} / ${this.totalItemsNum}`;
     }
+
 
     updateNavigationButtons() {
         const totalPages = this.getTotalPages();
-        this.firstBtn.disabled = this.currentPage === 1;
-        this.prevBtn.disabled = this.currentPage === 1;
-        this.nextBtn.disabled = this.currentPage === totalPages || totalPages === 0;
-        this.lastBtn.disabled = this.currentPage === totalPages || totalPages === 0;
+        this.refs.firstBtn.disabled = this.currentPage === 1;
+        this.refs.prevBtn.disabled = this.currentPage === 1;
+        this.refs.nextBtn.disabled = this.currentPage === totalPages || totalPages === 0;
+        this.refs.lastBtn.disabled = this.currentPage === totalPages || totalPages === 0;
     }
 
     updateDisplay() {
