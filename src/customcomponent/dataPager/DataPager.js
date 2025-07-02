@@ -30,8 +30,8 @@ export default class DataPager extends Component {
         super(component, options, data);
         this.currentPage = 1;
         this.itemsPerPage = this.component.pageSize || 5;
-        this.data = this.getSampleData();
-        this.totalItems = this.data.length;
+        this.items = this.getSampleData();
+        this.totalItemsNum = this.items.length;
     }
 
     getSampleData() {
@@ -47,6 +47,14 @@ export default class DataPager extends Component {
             { project: "Project Iota", department: "R&D", lineManager: "Chris Anderson", businessPhone: "+1-555-0139", businessFax: "+1-555-0140", emailGroup: "iota-team@company.com", remarks: "Research phase" },
             { project: "Project Kappa", department: "Quality Assurance", lineManager: "Amanda Miller", businessPhone: "+1-555-0141", businessFax: "+1-555-0142", emailGroup: "kappa-team@company.com", remarks: "Testing in progress" }
         ];
+    }
+
+    detach() {
+        return super.detach();
+    }
+
+    destroy() {
+        return super.destroy();
     }
 
     render() {
@@ -257,11 +265,11 @@ export default class DataPager extends Component {
     }
 
     getTotalPages() {
-        return Math.ceil(this.totalItems / this.itemsPerPage);
+        return Math.ceil(this.totalItemsNum / this.itemsPerPage);
     }
 
     getCurrentPageData() {
-        const dataArray = Array.isArray(this.data) ? this.data : this.getSampleData();
+        const dataArray = Array.isArray(this.items) ? this.items : this.getSampleData();
         const startIndex = (this.currentPage - 1) * this.itemsPerPage;
         const endIndex = startIndex + this.itemsPerPage;
         return dataArray.slice(startIndex, endIndex);
@@ -293,8 +301,8 @@ export default class DataPager extends Component {
 
     updatePageInfo() {
         const startItem = (this.currentPage - 1) * this.itemsPerPage + 1;
-        const endItem = Math.min(this.currentPage * this.itemsPerPage, this.totalItems);
-        this.pageInfo.textContent = `${startItem}-${endItem} / ${this.totalItems}`;
+        const endItem = Math.min(this.currentPage * this.itemsPerPage, this.totalItemsNum);
+        this.pageInfo.textContent = `${startItem}-${endItem} / ${this.totalItemsNum}`;
     }
 
     updateNavigationButtons() {
@@ -311,19 +319,10 @@ export default class DataPager extends Component {
         this.updateNavigationButtons();
     }
 
-    setValue(value) {
-        if (Array.isArray(value)) {
-            this.data = value;
-            this.totalItems = value.length;
-        } else {
-            this.data = this.getSampleData();
-            this.totalItems = this.data.length;
-        }
-        this.currentPage = 1;
-        this.updateDisplay();
-        super.setValue(value);
-    }
-
+    // The get defaultSchema function returns the schema of your component.
+    // It is used when merging all the json schemas upon component creation.
+    // There is not much more to say about this function other than your
+    // component will behave unexpectedly if this function is not included.
     get defaultSchema() {
         return DataPager.schema();
     }

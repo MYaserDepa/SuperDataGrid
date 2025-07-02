@@ -22,7 +22,7 @@ export class AppComponent {
 
   ngAfterViewInit() {
     window.onload = () => {
-      Formio.createForm(document.getElementById('formio'), 'https://urtplhhekwrngij.form.io/email');
+      // Formio.createForm(document.getElementById('formio'), 'https://urtplhhekwrngij.form.io/email');
     };
   }
 
