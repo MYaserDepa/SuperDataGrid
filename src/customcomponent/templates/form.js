@@ -1,8 +1,8 @@
 // You can use  ctx.pageSize / ctx.pageSizeOptions from render()
 // and ctx.component.label from schema
 export default function (ctx) {
-  return `<div ref="dataPager">
-          <div class="container">
+    return `<div ref="dataPager" class="datapager-${ctx.component.key}">
+        <div class="container">
             <div class="table-container">
                 <table class="data-table" ref="dataTable">
                     <thead>
@@ -39,5 +39,5 @@ export default function (ctx) {
                 </div>
             </div>
         </div>
-  </div>`
+    </div>`
 }

@@ -58,10 +58,11 @@ export default class DataPager extends Component {
     }
 
     render() {
-        return super.render(this.renderTemplate('dataPager', {
-            pageSize: this.itemsPerPage,
-            pageSizeOptions: this.component.pageSizeOptions || [5, 10, 25, 50, 100],
-        }));
+        return super.render(
+            this.getComponentStyles() + this.renderTemplate('dataPager', {
+                pageSize: this.itemsPerPage,
+                pageSizeOptions: this.component.pageSizeOptions || [5, 10, 25, 50, 100],
+            }));
     }
 
     attach(element) {
@@ -75,48 +76,44 @@ export default class DataPager extends Component {
             nextBtn: 'single',
             lastBtn: 'single'
         });
-        this.injectStyles();
         this.attachPager();
         return super.attach(element);
     }
 
-    injectStyles() {
-        const styleId = 'datapager-component-styles';
-        if (!document.getElementById(styleId)) {
-            const style = document.createElement('style');
-            style.id = styleId;
-            style.textContent = `
-                .container {
+    getComponentStyles() {
+        return `
+            <style id='testing'>
+                .datapager-${this.component.key} .container {
                     border-radius: 8px;
                     padding: 20px;
                     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
                 }
-                .table-container {
+                .datapager-${this.component.key} .table-container {
                     overflow-x: auto;
                 }
-                .data-table {
+                .datapager-${this.component.key} .data-table {
                     width: 100%;
                     border-collapse: collapse;
                     border: 1px solid #ddd;
                 }
-                .data-table th,
-                .data-table td {
+                .datapager-${this.component.key} .data-table th,
+                .datapager-${this.component.key} .data-table td {
                     padding: 8px;
                     text-align: left;
                     border-right: 1px solid #ddd;
                     border-bottom: 1px solid #ddd;
                 }
-                .data-table th {
+                .datapager-${this.component.key} .data-table th {
                     font-weight: 600;
                     color: #333;
                 }
-                .data-table tr:nth-child(even) {
+                .datapager-${this.component.key} .data-table tr:nth-child(even) {
                     background-color: #f8f9fa;
                 }
-                .data-table tr:hover {
+                .datapager-${this.component.key} .data-table tr:hover {
                     background-color: #e9ecef;
                 }
-                .pager {
+                .datapager-${this.component.key} .pager {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
@@ -124,40 +121,40 @@ export default class DataPager extends Component {
                     border-top: 1px solid #ddd;
                     background-color: #f8f9fa;
                 }
-                .pager-left {
+                .datapager-${this.component.key} .pager-left {
                     display: flex;
                     align-items: center;
                     gap: 10px;
                 }
-                .pager-right {
+                .datapager-${this.component.key} .pager-right {
                     display: flex;
                     align-items: center;
                 }
-                .items-per-page {
+                .datapager-${this.component.key} .items-per-page {
                     display: flex;
                     align-items: center;
                     gap: 8px;
                     font-size: 14px;
                     color: #666;
                 }
-                .items-per-page select {
+                .datapager-${this.component.key} .items-per-page select {
                     padding: 4px 8px;
                     border: 1px solid #ccc;
                     border-radius: 4px;
                     font-size: 14px;
                     cursor: pointer;
                 }
-                .page-info {
+                .datapager-${this.component.key} .page-info {
                     font-size: 14px;
                     color: #666;
                     margin-right: 10px;
                 }
-                .nav-controls {
+                .datapager-${this.component.key} .nav-controls {
                     display: flex;
                     align-items: center;
                     gap: 2px;
                 }
-                .nav-btn {
+                .datapager-${this.component.key} .nav-btn {
                     width: 32px;
                     height: 32px;
                     border: 1px solid #ddd;
@@ -170,23 +167,22 @@ export default class DataPager extends Component {
                     color: #666;
                     transition: all 0.2s;
                 }
-                .nav-btn:hover:not(:disabled) {
+                .datapager-${this.component.key} .nav-btn:hover:not(:disabled) {
                     background-color: #f0f0f0;
                     border-color: #999;
                 }
-                .nav-btn:disabled {
+                .datapager-${this.component.key} .nav-btn:disabled {
                     opacity: 0.5;
                     cursor: not-allowed;
                 }
-                .nav-btn:first-child {
+                .datapager-${this.component.key} .nav-btn:first-child {
                     border-radius: 4px 0 0 4px;
                 }
-                .nav-btn:last-child {
+                .datapager-${this.component.key} .nav-btn:last-child {
                     border-radius: 0 4px 4px 0;
                 }
-            `;
-            document.head.appendChild(style);
-        }
+            </style>
+        `;
     }
 
     attachPager() {
