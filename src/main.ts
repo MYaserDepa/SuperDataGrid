@@ -1,24 +1,25 @@
 import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
 import { AppComponent } from './app/app.component';
-import { Formio } from "@formio/angular";
+import { Formio } from '@formio/angular';
 // import rating from './customcomponent/rating/Rating'
 // import ratingTemplate from './customcomponent/templates/form';
-import dataPager from './customcomponent/dataPager/DataPager'
+import dataPager from './customcomponent/dataPager/DataPager';
 import dataPagerTemplate from './customcomponent/templates/form';
 
 Formio.use({
   components: {
-    dataPager
+    dataPager,
   },
   templates: {
     bootstrap: {
       dataPager: {
-        form: dataPagerTemplate
-      }
-    }
-  }
-})
+        form: dataPagerTemplate,
+      },
+    },
+  },
+});
 
-bootstrapApplication(AppComponent, appConfig)
-  .catch((err) => console.error(err));
+bootstrapApplication(AppComponent, appConfig).catch((err) =>
+  console.error(err)
+);
