@@ -29,96 +29,32 @@ export class AppComponent {
 			components: [
 				{
 					label: 'Data Grid',
-					reorder: false,
-					addAnotherPosition: 'bottom',
-					layoutFixed: false,
-					enableRowGroups: false,
-					initEmpty: false,
-					tableView: false,
-					defaultValue: [{}],
-					validateWhenHidden: false,
 					key: 'dataGrid',
 					type: 'datagrid',
 					input: true,
 					components: [
 						{
 							label: 'Text Field',
-							applyMaskOn: 'change',
-							tableView: true,
-							validateWhenHidden: false,
 							key: 'textField',
 							type: 'textfield',
 							input: true,
 						},
 						{
 							label: 'Text Field',
-							applyMaskOn: 'change',
-							tableView: true,
-							validateWhenHidden: false,
 							key: 'textField1',
 							type: 'textfield',
 							input: true,
 						},
 					],
 				},
-				{
-					type: 'button',
-					label: 'Submit',
-					key: 'submit',
-					disableOnInvalid: true,
-					input: true,
-					tableView: false,
-				},
+				{ type: 'button', label: 'Submit', key: 'submit', input: true },
 			],
 		}).then((form: any) => {
 			const dataGrid = form.getComponent('dataGrid');
-			form.on(
-				'componentChanged',
-				(instance: any, component: any, value: any, flags: any) => {
-					console.log(instance);
-					console.log(component);
-					console.log(value);
-					console.log(flags);
-				}
-			);
+			// console.log(dataGrid);
+			dataGrid.on('change', (event: any) => {
+				console.log('Data Grid changed:', event);
+			});
 		});
-
-		// Formio.createForm(document.getElementById('formio'), event.form).then(
-		// 	(form: any) => {
-		// 		form.on('change', (changed: any) => {
-		// 			const grid = form.getComponent('dataGrid');
-		// 			console.log(grid.components);
-		// 		});
-		// 	}
-		// );
 	}
 }
-// ngAfterViewInit() {
-// 	let submissionData;
-
-// 	// My email testing form on my form.io account
-// 	Formio.createForm(
-// 		document.getElementById('formio'),
-// 		'https://urtplhhekwrngij.form.io/email'
-// 	);
-
-// 	// Rendering the email form with the user's submission data after clicking submit
-// 	Formio.createForm(
-// 		document.getElementById('formio'),
-// 		'https://urtplhhekwrngij.form.io/email'
-// 	).then((form: any) => {
-// 		form.on('submitDone', (submission: any) => {
-// 			this.renderSubmission(submission);
-// 		});
-// 	});
-// }
-//
-// renderSubmission(submissionData: any) {
-// 	console.log(submissionData);
-// 	Formio.createForm(
-// 		document.getElementById('formio'),
-// 		'https://urtplhhekwrngij.form.io/email'
-// 	).then((form: any) => {
-// 		form.submission = submissionData;
-// 	});
-// }
