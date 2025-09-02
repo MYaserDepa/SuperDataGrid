@@ -51,9 +51,14 @@ export class AppComponent {
 			],
 		}).then((form: any) => {
 			const dataGrid = form.getComponent('dataGrid');
-			// console.log(dataGrid);
 			dataGrid.on('change', (event: any) => {
-				console.log('Data Grid changed:', event);
+				const rows = dataGrid.dataValue || [];
+
+				if (rows.length > 4) {
+					// Reset the grid
+					dataGrid.setValue([], { resetValue: true });
+				}
+				console.log('Current rows:', rows);
 			});
 		});
 	}
