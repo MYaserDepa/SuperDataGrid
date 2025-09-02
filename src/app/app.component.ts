@@ -16,6 +16,8 @@ export class AppComponent {
 	public form: Object = {
 		components: [],
 	};
+	currentPage = 0;
+	pages: any[] = [];
 
 	// Used with the form builder
 	onChange(event: any) {
@@ -50,15 +52,19 @@ export class AppComponent {
 				{ type: 'button', label: 'Submit', key: 'submit', input: true },
 			],
 		}).then((form: any) => {
+			// const dataPager = form.getComponent('dataPager');
+			// const dataGridKey = dataPager.component.gridToAttach;
+			// const dataGrid = form.getComponent(dataGridKey);
+
 			const dataGrid = form.getComponent('dataGrid');
 			dataGrid.on('change', (event: any) => {
 				const rows = dataGrid.dataValue || [];
 
 				if (rows.length > 4) {
-					// Reset the grid
-					dataGrid.setValue([], { resetValue: true });
+					this.pages.push(rows);
+					this.currentPage = this.pages.length;
+					dataGrid.resetValue();
 				}
-				console.log('Current rows:', rows);
 			});
 		});
 	}
