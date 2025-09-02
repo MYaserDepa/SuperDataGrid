@@ -4,7 +4,7 @@ import { AppComponent } from './app/app.component';
 import { Formio } from '@formio/angular';
 import rating from './customcomponent/rating/Rating';
 import { ratingTemplate } from './customcomponent/templates/form';
-import dataPager from './customcomponent/dataPager/DataPager';
+import dataPager from './customcomponent/dataPager/dataPager';
 import { dataPagerTemplate } from './customcomponent/templates/form';
 
 Formio.use({

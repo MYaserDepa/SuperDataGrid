@@ -1,19 +1,28 @@
-import { Formio } from "@formio/js";
-import editForm from "./DataPager.form.js";
-
-const Component = Formio.Components.components.component;
+import Component from "formiojs/components/_classes/component/Component";
+import editForm from "./dataPager.form.js";
+import _ from "lodash";
 
 export default class DataPager extends Component {
-	static editForm = editForm;
-
 	static schema(...extend) {
 		return Component.schema(
 			{
-				type: "dataPager",
+				type: "datapager",
 				label: "Data Pager",
 				key: "dataPager",
+				input: false,
+				persistent: false,
+				targetComponent: "",
 				pageSize: 5,
-				pageSizeOptions: [5, 10, 25, 50, 100],
+				showFirstLast: true,
+				showPrevNext: true,
+				showPageNumbers: true,
+				maxPageNumbers: 5,
+				showPageInfo: true,
+				showPageSizeSelector: true,
+				pageSizes: [5, 10, 25, 50, 100],
+				pagerPosition: "bottom", // top, bottom, both
+				hideWhenSinglePage: false,
+				customClasses: "",
 			},
 			...extend
 		);
@@ -22,361 +31,469 @@ export default class DataPager extends Component {
 	static get builderInfo() {
 		return {
 			title: "Data Pager",
-			icon: "list",
-			group: "data",
+			group: "advanced",
+			icon: "list-ol",
 			weight: 100,
+			documentation: "#",
 			schema: DataPager.schema(),
 		};
 	}
 
+	static editForm = editForm;
+
 	constructor(component, options, data) {
 		super(component, options, data);
 		this.currentPage = 1;
-		this.itemsPerPage = this.component.pageSize || 5;
-		this.items = this.getSampleData();
-		this.totalItemsNum = this.items.length;
+		this.totalPages = 1;
+		this.totalItems = 0;
+		this.targetComponentInstance = null;
+		this.originalData = [];
+		this.paginatedData = [];
+		this.pageSize = this.component.pageSize || 5;
 	}
 
-	getSampleData() {
-		return [
-			{
-				project: "Project Alpha",
-				department: "Engineering",
-				lineManager: "John Smith",
-				businessPhone: "+1-555-0123",
-				businessFax: "+1-555-0124",
-				emailGroup: "alpha-team@company.com",
-				remarks: "Active development",
-			},
-			{
-				project: "Project Beta",
-				department: "Marketing",
-				lineManager: "Sarah Johnson",
-				businessPhone: "+1-555-0125",
-				businessFax: "+1-555-0126",
-				emailGroup: "beta-team@company.com",
-				remarks: "In planning phase",
-			},
-			{
-				project: "Project Gamma",
-				department: "Sales",
-				lineManager: "Mike Wilson",
-				businessPhone: "+1-555-0127",
-				businessFax: "+1-555-0128",
-				emailGroup: "gamma-team@company.com",
-				remarks: "Ready for launch",
-			},
-			{
-				project: "Project Delta",
-				department: "Operations",
-				lineManager: "Lisa Brown",
-				businessPhone: "+1-555-0129",
-				businessFax: "+1-555-0130",
-				emailGroup: "delta-team@company.com",
-				remarks: "Under review",
-			},
-			{
-				project: "Project Epsilon",
-				department: "HR",
-				lineManager: "David Lee",
-				businessPhone: "+1-555-0131",
-				businessFax: "+1-555-0132",
-				emailGroup: "epsilon-team@company.com",
-				remarks: "Pending approval",
-			},
-			{
-				project: "Project Zeta",
-				department: "Finance",
-				lineManager: "Emma Davis",
-				businessPhone: "+1-555-0133",
-				businessFax: "+1-555-0134",
-				emailGroup: "zeta-team@company.com",
-				remarks: "Budget allocation",
-			},
-			{
-				project: "Project Eta",
-				department: "Legal",
-				lineManager: "Robert Taylor",
-				businessPhone: "+1-555-0135",
-				businessFax: "+1-555-0136",
-				emailGroup: "eta-team@company.com",
-				remarks: "Compliance check",
-			},
-			{
-				project: "Project Theta",
-				department: "IT",
-				lineManager: "Jennifer White",
-				businessPhone: "+1-555-0137",
-				businessFax: "+1-555-0138",
-				emailGroup: "theta-team@company.com",
-				remarks: "Infrastructure setup",
-			},
-			{
-				project: "Project Iota",
-				department: "R&D",
-				lineManager: "Chris Anderson",
-				businessPhone: "+1-555-0139",
-				businessFax: "+1-555-0140",
-				emailGroup: "iota-team@company.com",
-				remarks: "Research phase",
-			},
-			{
-				project: "Project Kappa",
-				department: "Quality Assurance",
-				lineManager: "Amanda Miller",
-				businessPhone: "+1-555-0141",
-				businessFax: "+1-555-0142",
-				emailGroup: "kappa-team@company.com",
-				remarks: "Testing in progress",
-			},
-		];
+	get defaultSchema() {
+		return DataPager.schema();
 	}
 
-	detach() {
-		return super.detach();
+	init() {
+		super.init();
+		this.pageSize = this.component.pageSize || 5;
+
+		// Wait for the form to be ready before finding target component
+		if (this.root && this.root.on) {
+			this.root.on("change", this.handleFormChange.bind(this));
+			this.root.on("initialized", this.findTargetComponent.bind(this));
+		}
+
+		// Try to find target component immediately if form is already initialized
+		setTimeout(() => this.findTargetComponent(), 100);
 	}
 
-	destroy() {
-		return super.destroy();
+	findTargetComponent() {
+		if (!this.component.targetComponent || !this.root) {
+			return;
+		}
+
+		// Search for the target component in the form
+		this.root.everyComponent((component) => {
+			if (component.component.key === this.component.targetComponent) {
+				this.targetComponentInstance = component;
+				this.attachToTargetComponent();
+				return false; // Stop searching
+			}
+		});
+	}
+
+	attachToTargetComponent() {
+		if (!this.targetComponentInstance) {
+			return;
+		}
+
+		const componentType = this.targetComponentInstance.component.type;
+
+		// Store original methods
+		if (!this.targetComponentInstance._originalAddRow) {
+			this.targetComponentInstance._originalAddRow =
+				this.targetComponentInstance.addRow;
+		}
+		if (!this.targetComponentInstance._originalRemoveRow) {
+			this.targetComponentInstance._originalRemoveRow =
+				this.targetComponentInstance.removeRow;
+		}
+		if (!this.targetComponentInstance._originalSetValue) {
+			this.targetComponentInstance._originalSetValue =
+				this.targetComponentInstance.setValue;
+		}
+
+		// Override methods based on component type
+		switch (componentType) {
+			case "datagrid":
+			case "editgrid":
+				this.attachToGrid();
+				break;
+			case "datamap":
+				this.attachToDataMap();
+				break;
+			case "tree":
+				this.attachToTree();
+				break;
+		}
+
+		// Initial pagination
+		this.updatePagination();
+	}
+
+	attachToGrid() {
+		const self = this;
+
+		// Override addRow
+		this.targetComponentInstance.addRow = function () {
+			const result = this._originalAddRow
+				? this._originalAddRow.apply(this, arguments)
+				: null;
+			self.handleDataChange();
+			return result;
+		};
+
+		// Override removeRow
+		this.targetComponentInstance.removeRow = function (index) {
+			// Adjust index for pagination
+			const actualIndex = (self.currentPage - 1) * self.pageSize + index;
+			const result = this._originalRemoveRow
+				? this._originalRemoveRow.call(this, actualIndex)
+				: null;
+			self.handleDataChange();
+			return result;
+		};
+
+		// Override setValue to capture data changes
+		this.targetComponentInstance.setValue = function (value, flags) {
+			const result = this._originalSetValue
+				? this._originalSetValue.call(this, value, flags)
+				: null;
+			self.handleDataChange();
+			return result;
+		};
+
+		// Watch for value changes
+		this.targetComponentInstance.on("change", () => {
+			self.handleDataChange();
+		});
+	}
+
+	attachToDataMap() {
+		const self = this;
+
+		this.targetComponentInstance.setValue = function (value, flags) {
+			const result = this._originalSetValue
+				? this._originalSetValue.call(this, value, flags)
+				: null;
+			self.handleDataChange();
+			return result;
+		};
+
+		this.targetComponentInstance.on("change", () => {
+			self.handleDataChange();
+		});
+	}
+
+	attachToTree() {
+		const self = this;
+
+		this.targetComponentInstance.setValue = function (value, flags) {
+			const result = this._originalSetValue
+				? this._originalSetValue.call(this, value, flags)
+				: null;
+			self.handleDataChange();
+			return result;
+		};
+
+		this.targetComponentInstance.on("change", () => {
+			self.handleDataChange();
+		});
+	}
+
+	handleFormChange(flags) {
+		if (!this.targetComponentInstance && this.component.targetComponent) {
+			this.findTargetComponent();
+		}
+	}
+
+	handleDataChange() {
+		if (!this.targetComponentInstance) {
+			return;
+		}
+
+		// Get all data from target component
+		const allData = this.getAllData();
+		this.originalData = Array.isArray(allData) ? [...allData] : [];
+		this.totalItems = this.originalData.length;
+		this.totalPages = Math.ceil(this.totalItems / this.pageSize);
+
+		// Ensure current page is valid
+		if (this.currentPage > this.totalPages && this.totalPages > 0) {
+			this.currentPage = this.totalPages;
+		}
+		if (this.currentPage < 1 && this.totalPages > 0) {
+			this.currentPage = 1;
+		}
+
+		this.updatePagination();
+		this.redraw();
+	}
+
+	getAllData() {
+		if (!this.targetComponentInstance) {
+			return [];
+		}
+
+		const componentType = this.targetComponentInstance.component.type;
+
+		switch (componentType) {
+			case "datagrid":
+			case "editgrid":
+				return this.targetComponentInstance.dataValue || [];
+			case "datamap":
+				// For datamap, convert object to array of key-value pairs
+				const mapData = this.targetComponentInstance.dataValue || {};
+				return Object.entries(mapData).map(([key, value]) => ({ key, value }));
+			case "tree":
+				// For tree, flatten the tree structure for pagination
+				return this.flattenTree(this.targetComponentInstance.dataValue || {});
+			default:
+				return [];
+		}
+	}
+
+	flattenTree(tree, result = []) {
+		if (Array.isArray(tree)) {
+			tree.forEach((node) => {
+				result.push(node);
+				if (node.children && node.children.length > 0) {
+					this.flattenTree(node.children, result);
+				}
+			});
+		} else if (typeof tree === "object" && tree !== null) {
+			result.push(tree);
+			if (tree.children && tree.children.length > 0) {
+				this.flattenTree(tree.children, result);
+			}
+		}
+		return result;
+	}
+
+	updatePagination() {
+		if (!this.targetComponentInstance || this.originalData.length === 0) {
+			return;
+		}
+
+		const startIndex = (this.currentPage - 1) * this.pageSize;
+		const endIndex = Math.min(startIndex + this.pageSize, this.totalItems);
+		this.paginatedData = this.originalData.slice(startIndex, endIndex);
+
+		// Update the visible rows in the target component
+		this.updateTargetComponentDisplay();
+	}
+
+	updateTargetComponentDisplay() {
+		if (!this.targetComponentInstance) {
+			return;
+		}
+
+		const componentType = this.targetComponentInstance.component.type;
+
+		switch (componentType) {
+			case "datagrid":
+			case "editgrid":
+				this.updateGridDisplay();
+				break;
+			case "datamap":
+				this.updateDataMapDisplay();
+				break;
+			case "tree":
+				this.updateTreeDisplay();
+				break;
+		}
+	}
+
+	updateGridDisplay() {
+		// Temporarily disable our override
+		const setValue = this.targetComponentInstance.setValue;
+		this.targetComponentInstance.setValue =
+			this.targetComponentInstance._originalSetValue;
+
+		// Update the grid with paginated data
+		this.targetComponentInstance.setValue(this.paginatedData);
+
+		// Re-enable our override
+		this.targetComponentInstance.setValue = setValue;
+	}
+
+	updateDataMapDisplay() {
+		// Convert paginated array back to object for datamap
+		const paginatedMap = {};
+		this.paginatedData.forEach((item) => {
+			if (item.key !== undefined) {
+				paginatedMap[item.key] = item.value;
+			}
+		});
+
+		const setValue = this.targetComponentInstance.setValue;
+		this.targetComponentInstance.setValue =
+			this.targetComponentInstance._originalSetValue;
+		this.targetComponentInstance.setValue(paginatedMap);
+		this.targetComponentInstance.setValue = setValue;
+	}
+
+	updateTreeDisplay() {
+		// For tree, we'll show a subset of the flattened tree
+		// This is a simplified approach - in production, you might want to maintain tree structure
+		const setValue = this.targetComponentInstance.setValue;
+		this.targetComponentInstance.setValue =
+			this.targetComponentInstance._originalSetValue;
+		this.targetComponentInstance.setValue(this.paginatedData);
+		this.targetComponentInstance.setValue = setValue;
+	}
+
+	goToPage(page) {
+		if (page < 1 || page > this.totalPages) {
+			return;
+		}
+
+		this.currentPage = page;
+		this.updatePagination();
+		this.redraw();
+		this.emit("pageChange", {
+			page: this.currentPage,
+			pageSize: this.pageSize,
+		});
+	}
+
+	changePageSize(newSize) {
+		this.pageSize = parseInt(newSize, 10);
+		this.totalPages = Math.ceil(this.totalItems / this.pageSize);
+
+		// Adjust current page if necessary
+		if (this.currentPage > this.totalPages && this.totalPages > 0) {
+			this.currentPage = this.totalPages;
+		}
+
+		this.updatePagination();
+		this.redraw();
+		this.emit("pageSizeChange", {
+			page: this.currentPage,
+			pageSize: this.pageSize,
+		});
+	}
+
+	renderContent() {
+		// Import the template function
+		const { dataPagerTemplate } = require("../templates/form.js");
+
+		const context = {
+			id: this.id,
+			currentPage: this.currentPage,
+			totalPages: this.totalPages,
+			totalItems: this.totalItems,
+			pageSize: this.pageSize,
+			startItem:
+				this.totalItems > 0 ? (this.currentPage - 1) * this.pageSize + 1 : 0,
+			endItem: Math.min(this.currentPage * this.pageSize, this.totalItems),
+			showFirstLast: this.component.showFirstLast,
+			showPrevNext: this.component.showPrevNext,
+			showPageNumbers: this.component.showPageNumbers,
+			showPageInfo: this.component.showPageInfo,
+			showPageSizeSelector: this.component.showPageSizeSelector,
+			pageSizes: this.component.pageSizes || [5, 10, 25, 50, 100],
+			hideWhenSinglePage: this.component.hideWhenSinglePage,
+			isFirstPage: this.currentPage === 1,
+			isLastPage: this.currentPage === this.totalPages,
+			pageNumbers: this.getPageNumbers(),
+			customClasses: this.component.customClasses || "",
+		};
+
+		return dataPagerTemplate(context);
 	}
 
 	render() {
-		return super.render(
-			this.getComponentStyles() +
-				this.renderTemplate("dataPager", {
-					pageSize: this.itemsPerPage,
-					pageSizeOptions: this.component.pageSizeOptions || [
-						5, 10, 25, 50, 100,
-					],
-				})
-		);
+		return super.render(this.renderContent());
+	}
+
+	getPageNumbers() {
+		const pages = [];
+		const maxPages = this.component.maxPageNumbers || 5;
+		const halfMax = Math.floor(maxPages / 2);
+
+		let startPage = Math.max(1, this.currentPage - halfMax);
+		let endPage = Math.min(this.totalPages, startPage + maxPages - 1);
+
+		if (endPage - startPage + 1 < maxPages) {
+			startPage = Math.max(1, endPage - maxPages + 1);
+		}
+
+		for (let i = startPage; i <= endPage; i++) {
+			pages.push(i);
+		}
+
+		return pages;
 	}
 
 	attach(element) {
 		this.loadRefs(element, {
-			dataPager: "single",
-			itemsPerPage: "single",
-			pageInfo: "single",
-			tableBody: "single",
-			firstBtn: "single",
-			prevBtn: "single",
-			nextBtn: "single",
-			lastBtn: "single",
-		});
-		this.attachPager();
-		return super.attach(element);
-	}
-
-	getComponentStyles() {
-		return `
-            <style id='testing'>
-                .datapager-${this.component.key} .container {
-                    border-radius: 8px;
-                    padding: 20px;
-                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-                }
-                .datapager-${this.component.key} .table-container {
-                    overflow-x: auto;
-                }
-                .datapager-${this.component.key} .data-table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    border: 1px solid #ddd;
-                }
-                .datapager-${this.component.key} .data-table th,
-                .datapager-${this.component.key} .data-table td {
-                    padding: 8px;
-                    text-align: left;
-                    border-right: 1px solid #ddd;
-                    border-bottom: 1px solid #ddd;
-                }
-                .datapager-${this.component.key} .data-table th {
-                    font-weight: 600;
-                    color: #333;
-                }
-                .datapager-${this.component.key} .data-table tr:nth-child(even) {
-                    background-color: #f8f9fa;
-                }
-                .datapager-${this.component.key} .data-table tr:hover {
-                    background-color: #e9ecef;
-                }
-                .datapager-${this.component.key} .pager {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    padding: 10px 0;
-                    border-top: 1px solid #ddd;
-                    background-color: #f8f9fa;
-                }
-                .datapager-${this.component.key} .pager-left {
-                    display: flex;
-                    align-items: center;
-                    gap: 10px;
-                }
-                .datapager-${this.component.key} .pager-right {
-                    display: flex;
-                    align-items: center;
-                }
-                .datapager-${this.component.key} .items-per-page {
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    font-size: 14px;
-                    color: #666;
-                }
-                .datapager-${this.component.key} .items-per-page select {
-                    padding: 4px 8px;
-                    border: 1px solid #ccc;
-                    border-radius: 4px;
-                    font-size: 14px;
-                    cursor: pointer;
-                }
-                .datapager-${this.component.key} .page-info {
-                    font-size: 14px;
-                    color: #666;
-                    margin-right: 10px;
-                }
-                .datapager-${this.component.key} .nav-controls {
-                    display: flex;
-                    align-items: center;
-                    gap: 2px;
-                }
-                .datapager-${this.component.key} .nav-btn {
-                    width: 32px;
-                    height: 32px;
-                    border: 1px solid #ddd;
-                    background-color: white;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 16px;
-                    color: #666;
-                    transition: all 0.2s;
-                }
-                .datapager-${this.component.key} .nav-btn:hover:not(:disabled) {
-                    background-color: #f0f0f0;
-                    border-color: #999;
-                }
-                .datapager-${this.component.key} .nav-btn:disabled {
-                    opacity: 0.5;
-                    cursor: not-allowed;
-                }
-                .datapager-${this.component.key} .nav-btn:first-child {
-                    border-radius: 4px 0 0 4px;
-                }
-                .datapager-${this.component.key} .nav-btn:last-child {
-                    border-radius: 0 4px 4px 0;
-                }
-            </style>
-        `;
-	}
-
-	attachPager() {
-		this.bindEvents();
-		this.updateDisplay();
-	}
-
-	bindEvents() {
-		this.addEventListener(this.refs.itemsPerPage, "change", () => {
-			this.itemsPerPage = parseInt(this.refs.itemsPerPage.value);
-			this.currentPage = 1;
-			this.updateDisplay();
+			firstButton: "single",
+			prevButton: "single",
+			nextButton: "single",
+			lastButton: "single",
+			pageButtons: "multiple",
+			pageSizeSelect: "single",
 		});
 
-		this.addEventListener(this.refs.firstBtn, "click", () => {
-			this.currentPage = 1;
-			this.updateDisplay();
-		});
+		const superAttach = super.attach(element);
 
-		this.addEventListener(this.refs.prevBtn, "click", () => {
-			if (this.currentPage > 1) {
-				this.currentPage--;
-				this.updateDisplay();
-			}
-		});
-
-		this.addEventListener(this.refs.nextBtn, "click", () => {
-			if (this.currentPage < this.getTotalPages()) {
-				this.currentPage++;
-				this.updateDisplay();
-			}
-		});
-
-		this.addEventListener(this.refs.lastBtn, "click", () => {
-			this.currentPage = this.getTotalPages();
-			this.updateDisplay();
-		});
-	}
-
-	getTotalPages() {
-		return Math.ceil(this.totalItemsNum / this.itemsPerPage);
-	}
-
-	getCurrentPageData() {
-		const dataArray = Array.isArray(this.items)
-			? this.items
-			: this.getSampleData();
-		const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-		const endIndex = startIndex + this.itemsPerPage;
-		return dataArray.slice(startIndex, endIndex);
-	}
-
-	updateTable() {
-		const currentData = this.getCurrentPageData();
-		this.refs.tableBody.innerHTML = "";
-		if (currentData.length === 0) {
-			const row = document.createElement("tr");
-			row.innerHTML =
-				'<td colspan="7" class="sample-data">No data available</td>';
-			this.refs.tableBody.appendChild(row);
-			return;
+		// Attach event listeners
+		if (this.refs.firstButton) {
+			this.addEventListener(this.refs.firstButton, "click", () =>
+				this.goToPage(1)
+			);
 		}
-		currentData.forEach((item) => {
-			const row = document.createElement("tr");
-			row.innerHTML = `
-                <td>${item.project}</td>
-                <td>${item.department}</td>
-                <td>${item.lineManager}</td>
-                <td>${item.businessPhone}</td>
-                <td>${item.businessFax}</td>
-                <td>${item.emailGroup}</td>
-                <td>${item.remarks}</td>
-            `;
-			this.refs.tableBody.appendChild(row);
-		});
+
+		if (this.refs.prevButton) {
+			this.addEventListener(this.refs.prevButton, "click", () =>
+				this.goToPage(this.currentPage - 1)
+			);
+		}
+
+		if (this.refs.nextButton) {
+			this.addEventListener(this.refs.nextButton, "click", () =>
+				this.goToPage(this.currentPage + 1)
+			);
+		}
+
+		if (this.refs.lastButton) {
+			this.addEventListener(this.refs.lastButton, "click", () =>
+				this.goToPage(this.totalPages)
+			);
+		}
+
+		if (this.refs.pageButtons) {
+			this.refs.pageButtons.forEach((button) => {
+				this.addEventListener(button, "click", (e) => {
+					const page = parseInt(e.target.dataset.page, 10);
+					this.goToPage(page);
+				});
+			});
+		}
+
+		if (this.refs.pageSizeSelect) {
+			this.addEventListener(this.refs.pageSizeSelect, "change", (e) => {
+				this.changePageSize(e.target.value);
+			});
+		}
+
+		return superAttach;
 	}
 
-	updatePageInfo() {
-		const startItem = (this.currentPage - 1) * this.itemsPerPage + 1;
-		const endItem = Math.min(
-			this.currentPage * this.itemsPerPage,
-			this.totalItemsNum
-		);
-		this.refs.pageInfo.textContent = `${startItem}-${endItem} / ${this.totalItemsNum}`;
-	}
+	detach() {
+		// Restore original methods if they exist
+		if (this.targetComponentInstance) {
+			if (this.targetComponentInstance._originalAddRow) {
+				this.targetComponentInstance.addRow =
+					this.targetComponentInstance._originalAddRow;
+			}
+			if (this.targetComponentInstance._originalRemoveRow) {
+				this.targetComponentInstance.removeRow =
+					this.targetComponentInstance._originalRemoveRow;
+			}
+			if (this.targetComponentInstance._originalSetValue) {
+				this.targetComponentInstance.setValue =
+					this.targetComponentInstance._originalSetValue;
+			}
+		}
 
-	updateNavigationButtons() {
-		const totalPages = this.getTotalPages();
-		this.refs.firstBtn.disabled = this.currentPage === 1;
-		this.refs.prevBtn.disabled = this.currentPage === 1;
-		this.refs.nextBtn.disabled =
-			this.currentPage === totalPages || totalPages === 0;
-		this.refs.lastBtn.disabled =
-			this.currentPage === totalPages || totalPages === 0;
-	}
-
-	updateDisplay() {
-		this.updateTable();
-		this.updatePageInfo();
-		this.updateNavigationButtons();
-	}
-
-	// The get defaultSchema function returns the schema of your component.
-	// It is used when merging all the json schemas upon component creation.
-	// There is not much more to say about this function other than your
-	// component will behave unexpectedly if this function is not included.
-	get defaultSchema() {
-		return DataPager.schema();
+		return super.detach();
 	}
 }
+
+// Register the component
+DataPager.editForm = editForm;
