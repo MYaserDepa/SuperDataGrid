@@ -1,6 +1,6 @@
 // You can use  ctx.pageSize / ctx.pageSizeOptions from render()
 // and ctx.component.label from schema
-export default function (ctx) {
+export function dataPagerTemplate(ctx) {
 	return `<div ref="dataPager" class="datapager-${ctx.component.key}">
         <div class="container">
             <div class="table-container">
