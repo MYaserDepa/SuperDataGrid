@@ -30,7 +30,10 @@ export default class DataPager extends Component {
 
 	constructor(component, options, data) {
 		super(component, options, data);
-		this.pageLimit = Number(this.component.pageLimit || 4);
+		this.pageLimit =
+			Number(this.component.pageLimit) > 0
+				? Number(this.component.pageLimit)
+				: 5;
 		this.totalPagesNum = 1;
 		this.currentPageNum = 1;
 		this.totalItemsNum = 1;
@@ -94,11 +97,13 @@ export default class DataPager extends Component {
 		}
 
 		// Initialize items from the target's dataValue (make a deep copy)
-		const v = this.targetComponent.dataValue;
-		this.items = Array.isArray(v) ? JSON.parse(JSON.stringify(v)) : [];
+		const targetDataValue = this.targetComponent.dataValue;
+		this.items = Array.isArray(targetDataValue)
+			? JSON.parse(JSON.stringify(targetDataValue))
+			: [];
 
 		// Ensure pageLimit number is up-to-date from schema (incase builder changed it)
-		this.pageLimit = Number(this.component.pageLimit || this.pageLimit || 1);
+		this.pageLimit = Number(this.component.pageLimit || this.pageLimit);
 
 		// Compute totals and clamp current page
 		this.computeTotals();
@@ -155,11 +160,9 @@ export default class DataPager extends Component {
 	 */
 	computeTotals() {
 		this.totalItemsNum = Array.isArray(this.items) ? this.items.length : 0;
-		// Keep at least 1 page for UI consistency (matches your template defaults).
-		// If you prefer 0 pages when no items, change Math.max(1, ...) to allow 0.
 		this.totalPagesNum = Math.max(
 			1,
-			Math.ceil(this.totalItemsNum / (this.pageLimit || 1))
+			Math.ceil(this.totalItemsNum / this.pageLimit)
 		);
 		if (this.currentPageNum < 1) this.currentPageNum = 1;
 		if (this.currentPageNum > this.totalPagesNum)
@@ -172,10 +175,14 @@ export default class DataPager extends Component {
 	goToPage(pageNum) {
 		if (!this.targetComponent) return;
 
-		const p = Math.max(1, Math.min(pageNum || 1, this.totalPagesNum));
-		this.currentPageNum = p;
+		// ensure pageNum is always between 1 and totalPagesNum
+		const currentPageNum = Math.max(
+			1,
+			Math.min(pageNum || 1, this.totalPagesNum)
+		);
+		this.currentPageNum = currentPageNum;
 
-		const start = (p - 1) * this.pageLimit;
+		const start = (currentPageNum - 1) * this.pageLimit;
 		const end = start + this.pageLimit;
 		const pageSlice = this.items.slice(start, end);
 
