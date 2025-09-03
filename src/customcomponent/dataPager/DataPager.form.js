@@ -7,7 +7,9 @@ export default function (...extend) {
 	return baseEditForm(
 		[
 			{
-				key: "display",
+				key: "pager",
+				label: "Pager Settings",
+				weight: 10,
 				components: DataPagerEditDisplay,
 			},
 		],
