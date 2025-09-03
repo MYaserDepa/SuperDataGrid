@@ -1,25 +1,18 @@
 export default [
 	{
 		type: "number",
-		key: "pageSize",
+		key: "pageLimit",
+		defaultValue: 4,
 		label: "Maximum Page Size",
 		input: true,
 		tooltip: "The maximum number of items per page.",
 	},
 	{
-		type: "number",
-		key: "totalPages",
-		label: "Total Number of Pages",
+		type: "textfield",
+		key: "gridToAttach",
+		label: "Grid to Attach",
 		input: true,
-		tooltip: "The number of pages to display.",
-		hidden: true,
-	},
-	{
-		type: "number",
-		key: "currentPage",
-		label: "Current Page",
-		input: true,
-		tooltip: "The current page to display.",
-		hidden: true,
+		tooltip:
+			"Enter the key of the Data Grid, Edit Grid, Data Map, or Tree this pager should control.",
 	},
 ];
