@@ -26,46 +26,8 @@ export class AppComponent {
 			document.createTextNode(JSON.stringify(event.form, null, 4))
 		);
 
-		// Renders the form currently being built in the form builder
-		Formio.createForm(document.getElementById('formio'), {
-			components: [
-				{
-					label: 'Data Grid',
-					key: 'dataGrid',
-					type: 'datagrid',
-					input: true,
-					components: [
-						{
-							label: 'Text Field',
-							key: 'textField',
-							type: 'textfield',
-							input: true,
-						},
-						{
-							label: 'Text Field',
-							key: 'textField1',
-							type: 'textfield',
-							input: true,
-						},
-					],
-				},
-				{ type: 'button', label: 'Submit', key: 'submit', input: true },
-			],
-		}).then((form: any) => {
-			// const dataPager = form.getComponent('dataPager');
-			// const dataGridKey = dataPager.component.gridToAttach;
-			// const dataGrid = form.getComponent(dataGridKey);
-
-			const dataGrid = form.getComponent('dataGrid');
-			dataGrid.on('change', (event: any) => {
-				const rows = dataGrid.dataValue || [];
-
-				if (rows.length > 4) {
-					this.pages.push(rows);
-					this.currentPage = this.pages.length;
-					dataGrid.resetValue();
-				}
-			});
-		});
+		// Form renderer
+		let jsonSchema = JSON.parse(this.jsonElement!.nativeElement.innerHTML);
+		Formio.createForm(document.getElementById('formio'), jsonSchema);
 	}
 }
