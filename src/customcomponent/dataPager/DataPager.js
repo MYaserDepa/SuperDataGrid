@@ -13,6 +13,7 @@ export default class DataPager extends Component {
 				label: "Data Pager",
 				key: "dataPager",
 				pageLimit: 5,
+				gridToAttach: "",
 			},
 			...extend
 		);
@@ -30,6 +31,7 @@ export default class DataPager extends Component {
 
 	constructor(component, options, data) {
 		super(component, options, data);
+
 		this.pageLimit =
 			Number(this.component.pageLimit) > 0
 				? Number(this.component.pageLimit)
@@ -38,6 +40,7 @@ export default class DataPager extends Component {
 		this.currentPageNum = 1;
 		this.totalItemsNum = 1;
 		this.items = [];
+		this.targetComponent = null;
 	}
 
 	render() {
@@ -138,7 +141,14 @@ export default class DataPager extends Component {
 
 			// Recompute totals in case rows were added/removed
 			this.computeTotals();
-			this.updateUI();
+
+			// If this page exceeds the limit, move to next page
+			if (currentPageData.length > this.pageLimit) {
+				this.goToPage(this.currentPageNum + 1);
+			} else {
+				// Otherwise just refresh this page
+				this.goToPage(this.currentPageNum);
+			}
 		};
 
 		if (typeof this.targetComponent.on === "function") {
