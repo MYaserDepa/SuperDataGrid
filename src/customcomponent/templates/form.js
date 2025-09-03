@@ -9,7 +9,7 @@ export function dataPagerTemplate(ctx) {
 	const currentPageDefault = Number(ctx.currentPageNum ?? 1);
 	const totalPagesDefault = Number(ctx.totalPagesNum ?? 1);
 
-	return `<div ref="dataPager" class="datapager-${compKey}" role="navigation" aria-label="${label}" style="border: 3px solid #ddd; padding: 10px;">
+	return `<div ref="dataPager" class="datapager-${compKey}" role="navigation" aria-label="${label}" style="border: 3px solid #ddd; padding: 10px; text-align: right;">
     <div class="pager">
         <div class="nav-controls">
           <span class="items-on-page">
