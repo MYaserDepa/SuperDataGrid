@@ -135,9 +135,8 @@ export default class DataPager extends Component {
 				: [];
 
 			const offset = (this.currentPageNum - 1) * this.pageLimit;
-			for (let i = 0; i < currentPageData.length; i++) {
-				this.items[offset + i] = currentPageData[i];
-			}
+			// Remove the old slice and replace with new
+			this.items.splice(offset, this.pageLimit, ...currentPageData);
 
 			// Recompute totals in case rows were added/removed
 			this.computeTotals();
