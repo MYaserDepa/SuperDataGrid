@@ -12,7 +12,7 @@ export default class DataPager extends Component {
 				type: "dataPager",
 				label: "Data Pager",
 				key: "dataPager",
-				pageSize: 5,
+				pageLimit: 5,
 			},
 			...extend
 		);
@@ -30,149 +30,251 @@ export default class DataPager extends Component {
 
 	constructor(component, options, data) {
 		super(component, options, data);
-		this.currentPage = 1;
-		this.itemsPerPage = this.component.pageSize || 5;
-		this.items = this.getSampleData();
-		this.totalItemsNum = this.items.length;
-	}
-
-	detach() {
-		return super.detach();
-	}
-
-	destroy() {
-		return super.destroy();
+		this.pageLimit = Number(this.component.pageLimit || 4);
+		this.totalPagesNum = 1;
+		this.currentPageNum = 1;
+		this.totalItemsNum = 1;
+		this.items = [];
 	}
 
 	render() {
 		return super.render(
 			this.renderTemplate("dataPager", {
-				pageSize: this.itemsPerPage,
-				pageSizeOptions: this.component.pageSizeOptions || [5, 10, 25, 50, 100],
+				pageLimit: this.pageLimit,
+				totalPagesNum: this.totalPagesNum,
+				currentPageNum: this.currentPageNum,
+				totalItemsNum: this.totalItemsNum,
 			})
 		);
 	}
 
+	/**
+	 * Find the target component by key (searches recursively from root)
+	 */
+	findTargetComponent() {
+		if (!this.root || !this.component?.gridToAttach) return null;
+		try {
+			return this.root.getComponent(this.component.gridToAttach);
+		} catch (e) {
+			return null;
+		}
+	}
+
+	/**
+	 * Called after render; wires refs, finds target component, and initializes UI.
+	 */
 	attach(element) {
+		// Let base class attach first
+		super.attach(element);
+
+		// Load refs from template
 		this.loadRefs(element, {
 			dataPager: "single",
-			itemsPerPage: "single",
-			pageInfo: "single",
-			tableBody: "single",
+			firstItemNum: "single",
+			lastItemNum: "single",
+			totalItemsNum: "single",
+			currentPageNum: "single",
+			totalPagesNum: "single",
 			firstBtn: "single",
 			prevBtn: "single",
 			nextBtn: "single",
 			lastBtn: "single",
 		});
-		this.attachPager();
-		return super.attach(element);
-	}
 
-	attachPager() {
-		this.bindEvents();
-		this.updateDisplay();
-	}
+		// Locate the grid/etc to attach to
+		this.targetComponent = this.findTargetComponent();
 
-	bindEvents() {
-		this.addEventListener(this.refs.itemsPerPage, "change", () => {
-			this.itemsPerPage = parseInt(this.refs.itemsPerPage.value);
-			this.currentPage = 1;
-			this.updateDisplay();
-		});
-
-		this.addEventListener(this.refs.firstBtn, "click", () => {
-			this.currentPage = 1;
-			this.updateDisplay();
-		});
-
-		this.addEventListener(this.refs.prevBtn, "click", () => {
-			if (this.currentPage > 1) {
-				this.currentPage--;
-				this.updateDisplay();
-			}
-		});
-
-		this.addEventListener(this.refs.nextBtn, "click", () => {
-			if (this.currentPage < this.getTotalPages()) {
-				this.currentPage++;
-				this.updateDisplay();
-			}
-		});
-
-		this.addEventListener(this.refs.lastBtn, "click", () => {
-			this.currentPage = this.getTotalPages();
-			this.updateDisplay();
-		});
-	}
-
-	getTotalPages() {
-		return Math.ceil(this.totalItemsNum / this.itemsPerPage);
-	}
-
-	getCurrentPageData() {
-		const dataArray = Array.isArray(this.items)
-			? this.items
-			: this.getSampleData();
-		const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-		const endIndex = startIndex + this.itemsPerPage;
-		return dataArray.slice(startIndex, endIndex);
-	}
-
-	updateTable() {
-		const currentData = this.getCurrentPageData();
-		this.refs.tableBody.innerHTML = "";
-		if (currentData.length === 0) {
-			const row = document.createElement("tr");
-			row.innerHTML =
-				'<td colspan="7" class="sample-data">No data available</td>';
-			this.refs.tableBody.appendChild(row);
+		// If not found, show zero state and disable buttons
+		if (!this.targetComponent) {
+			this.items = [];
+			this.computeTotals();
+			this.updateUI();
+			this.setButtonsDisabled(true);
 			return;
 		}
-		currentData.forEach((item) => {
-			const row = document.createElement("tr");
-			row.innerHTML = `
-                <td>${item.project}</td>
-                <td>${item.department}</td>
-                <td>${item.lineManager}</td>
-                <td>${item.businessPhone}</td>
-                <td>${item.businessFax}</td>
-                <td>${item.emailGroup}</td>
-                <td>${item.remarks}</td>
-            `;
-			this.refs.tableBody.appendChild(row);
-		});
+
+		// Initialize items from the target's dataValue (make a deep copy)
+		const v = this.targetComponent.dataValue;
+		this.items = Array.isArray(v) ? JSON.parse(JSON.stringify(v)) : [];
+
+		// Ensure pageLimit number is up-to-date from schema (incase builder changed it)
+		this.pageLimit = Number(this.component.pageLimit || this.pageLimit || 1);
+
+		// Compute totals and clamp current page
+		this.computeTotals();
+
+		// Wire button click handlers (store references for cleanup)
+		this._firstHandler = () => this.goToPage(1);
+		this._prevHandler = () => this.goToPage(this.currentPageNum - 1);
+		this._nextHandler = () => this.goToPage(this.currentPageNum + 1);
+		this._lastHandler = () => this.goToPage(this.totalPagesNum);
+
+		if (this.refs.firstBtn)
+			this.refs.firstBtn.addEventListener("click", this._firstHandler);
+		if (this.refs.prevBtn)
+			this.refs.prevBtn.addEventListener("click", this._prevHandler);
+		if (this.refs.nextBtn)
+			this.refs.nextBtn.addEventListener("click", this._nextHandler);
+		if (this.refs.lastBtn)
+			this.refs.lastBtn.addEventListener("click", this._lastHandler);
+
+		// Listen for changes inside the target component so edits persist across pages.
+		// Not all component implementations expose on/off; guard those calls.
+		this._targetChangeHandler = () => {
+			// read the current visible page rows from the target and merge them back
+			const currentPageData = Array.isArray(this.targetComponent.dataValue)
+				? JSON.parse(JSON.stringify(this.targetComponent.dataValue))
+				: [];
+
+			const offset = (this.currentPageNum - 1) * this.pageLimit;
+			for (let i = 0; i < currentPageData.length; i++) {
+				this.items[offset + i] = currentPageData[i];
+			}
+
+			// Recompute totals in case rows were added/removed
+			this.computeTotals();
+			this.updateUI();
+		};
+
+		if (typeof this.targetComponent.on === "function") {
+			this.targetComponent.on("change", this._targetChangeHandler);
+		} else if (typeof this.targetComponent.addEventListener === "function") {
+			// fallback (rare)
+			this.targetComponent.addEventListener(
+				"change",
+				this._targetChangeHandler
+			);
+		}
+
+		// Show initial page
+		this.goToPage(this.currentPageNum);
 	}
 
-	updatePageInfo() {
-		const startItem = (this.currentPage - 1) * this.itemsPerPage + 1;
-		const endItem = Math.min(
-			this.currentPage * this.itemsPerPage,
-			this.totalItemsNum
+	/**
+	 * Recalculate totals and clamp current page
+	 */
+	computeTotals() {
+		this.totalItemsNum = Array.isArray(this.items) ? this.items.length : 0;
+		// Keep at least 1 page for UI consistency (matches your template defaults).
+		// If you prefer 0 pages when no items, change Math.max(1, ...) to allow 0.
+		this.totalPagesNum = Math.max(
+			1,
+			Math.ceil(this.totalItemsNum / (this.pageLimit || 1))
 		);
-		this.refs.pageInfo.textContent = `${startItem}-${endItem} / ${this.totalItemsNum}`;
+		if (this.currentPageNum < 1) this.currentPageNum = 1;
+		if (this.currentPageNum > this.totalPagesNum)
+			this.currentPageNum = this.totalPagesNum;
 	}
 
-	updateNavigationButtons() {
-		const totalPages = this.getTotalPages();
-		this.refs.firstBtn.disabled = this.currentPage === 1;
-		this.refs.prevBtn.disabled = this.currentPage === 1;
-		this.refs.nextBtn.disabled =
-			this.currentPage === totalPages || totalPages === 0;
-		this.refs.lastBtn.disabled =
-			this.currentPage === totalPages || totalPages === 0;
+	/**
+	 * Show a specific page: slice items, set target value, update UI
+	 */
+	goToPage(pageNum) {
+		if (!this.targetComponent) return;
+
+		const p = Math.max(1, Math.min(pageNum || 1, this.totalPagesNum));
+		this.currentPageNum = p;
+
+		const start = (p - 1) * this.pageLimit;
+		const end = start + this.pageLimit;
+		const pageSlice = this.items.slice(start, end);
+
+		// Set the visible rows in the target component.
+		// setValue should exist on formio components; call defensively.
+		if (typeof this.targetComponent.setValue === "function") {
+			this.targetComponent.setValue(pageSlice);
+		} else {
+			// fallback: set dataValue directly (less ideal)
+			this.targetComponent.dataValue = pageSlice;
+		}
+
+		// Update UI text and button states
+		this.updateUI();
 	}
 
-	updateDisplay() {
-		this.updateTable();
-		this.updatePageInfo();
-		this.updateNavigationButtons();
+	/**
+	 * Update the DOM refs for numbers and button disabled states
+	 */
+	updateUI() {
+		// First/last item numbers: show 0 when no items
+		const firstNum =
+			this.totalItemsNum === 0
+				? 0
+				: (this.currentPageNum - 1) * this.pageLimit + 1;
+		const lastNum =
+			this.totalItemsNum === 0
+				? 0
+				: Math.min(this.currentPageNum * this.pageLimit, this.totalItemsNum);
+
+		if (this.refs.firstItemNum) this.refs.firstItemNum.innerText = firstNum;
+		if (this.refs.lastItemNum) this.refs.lastItemNum.innerText = lastNum;
+		if (this.refs.totalItemsNum)
+			this.refs.totalItemsNum.innerText = this.totalItemsNum;
+		if (this.refs.currentPageNum)
+			this.refs.currentPageNum.innerText =
+				this.totalItemsNum === 0 ? 0 : this.currentPageNum;
+		if (this.refs.totalPagesNum)
+			this.refs.totalPagesNum.innerText = this.totalPagesNum;
+
+		// Button enable/disable
+		const onFirst = this.totalItemsNum === 0 || this.currentPageNum === 1;
+		const onLast =
+			this.totalItemsNum === 0 || this.currentPageNum === this.totalPagesNum;
+
+		if (this.refs.firstBtn) this.refs.firstBtn.disabled = onFirst;
+		if (this.refs.prevBtn) this.refs.prevBtn.disabled = onFirst;
+		if (this.refs.nextBtn) this.refs.nextBtn.disabled = onLast;
+		if (this.refs.lastBtn) this.refs.lastBtn.disabled = onLast;
 	}
 
-	// The get defaultSchema function returns the schema of your component.
-	// It is used when merging all the json schemas upon component creation.
-	// There is not much more to say about this function other than your
-	// component will behave unexpectedly if this function is not included.
-	get defaultSchema() {
-		return DataPager.schema();
+	/**
+	 * enable/disable all buttons quickly
+	 */
+	setButtonsDisabled(disabled = true) {
+		if (this.refs.firstBtn) this.refs.firstBtn.disabled = disabled;
+		if (this.refs.prevBtn) this.refs.prevBtn.disabled = disabled;
+		if (this.refs.nextBtn) this.refs.nextBtn.disabled = disabled;
+		if (this.refs.lastBtn) this.refs.lastBtn.disabled = disabled;
+	}
+
+	/**
+	 * Cleanup listeners when component is removed
+	 */
+	detach() {
+		// remove button listeners
+		if (this.refs.firstBtn && this._firstHandler)
+			this.refs.firstBtn.removeEventListener("click", this._firstHandler);
+		if (this.refs.prevBtn && this._prevHandler)
+			this.refs.prevBtn.removeEventListener("click", this._prevHandler);
+		if (this.refs.nextBtn && this._nextHandler)
+			this.refs.nextBtn.removeEventListener("click", this._nextHandler);
+		if (this.refs.lastBtn && this._lastHandler)
+			this.refs.lastBtn.removeEventListener("click", this._lastHandler);
+
+		// remove target change listener
+		if (this.targetComponent) {
+			if (
+				typeof this.targetComponent.off === "function" &&
+				this._targetChangeHandler
+			) {
+				this.targetComponent.off("change", this._targetChangeHandler);
+			} else if (
+				typeof this.targetComponent.removeEventListener === "function" &&
+				this._targetChangeHandler
+			) {
+				this.targetComponent.removeEventListener(
+					"change",
+					this._targetChangeHandler
+				);
+			} else if (
+				typeof this.targetComponent.on === "function" &&
+				typeof this.targetComponent.off === "undefined" &&
+				this._targetChangeHandler
+			) {
+				// some implementations use on() but not off(); best-effort: no-op
+			}
+		}
+
+		return super.detach();
 	}
 }
