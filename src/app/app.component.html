@@ -1,5 +1,5 @@
 <div id="container">
-  <form-builder #builderRef [form]="form" (change)="onChange($event)"></form-builder>
+  <form-builder #builderRef [form]="form" (change)="onChange($event)" (submit)="onSubmit($event)"></form-builder>
 
   <div class="well jsonviewer" hidden>
     <pre id="json"><code class="language-json" #json></code></pre>
@@ -7,5 +7,5 @@
 
   <hr>
 
-  <div id="formio"></div>
+  <div #rendererRef id="formio-renderer"></div>
 </div>

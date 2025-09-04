@@ -16,18 +16,22 @@ export class AppComponent {
 	public form: Object = {
 		components: [],
 	};
-	currentPage = 0;
-	pages: any[] = [];
 
 	// Used with the form builder
 	onChange(event: any) {
-		this.jsonElement!.nativeElement.innerHTML = '';
-		this.jsonElement!.nativeElement.appendChild(
-			document.createTextNode(JSON.stringify(event.form, null, 4))
-		);
-
 		// Form renderer
-		let jsonSchema = JSON.parse(this.jsonElement!.nativeElement.innerHTML);
-		Formio.createForm(document.getElementById('formio'), jsonSchema);
+		Formio.createForm(
+			document.getElementById('formio-renderer'),
+			event.form
+		).then((form: any) => {
+			form.on('submit', (submission: any) => {
+				// localStorage.setItem('submissionData', JSON.stringify(submission.data));
+				// localStorage.setItem('formBuilderData', JSON.stringify(event.form));
+			});
+		});
+	}
+
+	onSubmit(event: any) {
+		console.log(this.builderComponent?.form);
 	}
 }
