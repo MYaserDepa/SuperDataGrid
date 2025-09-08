@@ -39,7 +39,7 @@ export default class DataPager extends Component {
 		this.currentPageNum = 1;
 		this.totalPagesNum = 1;
 		this.totalRowsNum = 1;
-		this.gridRows = [];
+		this.allGridRows = [];
 		this.targetComponent = null;
 	}
 
@@ -92,7 +92,7 @@ export default class DataPager extends Component {
 
 		// If not found, show zero state and disable buttons
 		if (!this.targetComponent) {
-			this.gridRows = [];
+			this.allGridRows = [];
 			this.computeTotals();
 			this.updateUI();
 			this.setButtonsDisabled(true);
@@ -101,7 +101,7 @@ export default class DataPager extends Component {
 
 		// Initialize items from the target's dataValue (make a deep copy)
 		const targetDataValue = this.targetComponent.dataValue;
-		this.gridRows = Array.isArray(targetDataValue)
+		this.allGridRows = Array.isArray(targetDataValue)
 			? JSON.parse(JSON.stringify(targetDataValue))
 			: [];
 
@@ -136,7 +136,7 @@ export default class DataPager extends Component {
 
 			const offset = (this.currentPageNum - 1) * this.pageLimit;
 			// Remove the old slice and replace with new
-			this.gridRows.splice(offset, this.pageLimit, ...currentPageData);
+			this.allGridRows.splice(offset, this.pageLimit, ...currentPageData);
 
 			// Recompute totals in case rows were added/removed
 			this.computeTotals();
@@ -168,8 +168,8 @@ export default class DataPager extends Component {
 	 * Recalculate totals and clamp current page
 	 */
 	computeTotals() {
-		this.totalRowsNum = Array.isArray(this.gridRows)
-			? this.gridRows.length
+		this.totalRowsNum = Array.isArray(this.allGridRows)
+			? this.allGridRows.length
 			: 0;
 		this.totalPagesNum = Math.max(
 			1,
@@ -195,7 +195,7 @@ export default class DataPager extends Component {
 
 		const start = (currentPageNum - 1) * this.pageLimit;
 		const end = start + this.pageLimit;
-		const pageSlice = this.gridRows.slice(start, end);
+		const pageSlice = this.allGridRows.slice(start, end);
 
 		// Set the visible rows in the target component.
 		// setValue should exist on formio components; call defensively.

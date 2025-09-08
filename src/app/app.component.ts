@@ -24,7 +24,7 @@ export class AppComponent implements AfterViewInit {
 
 			Formio.createForm(
 				document.getElementById('formio-renderer'),
-				JSON.parse(savedForm)
+				this.form
 			).then((form: any) => {
 				// Load previous submission
 				const submissionData = localStorage.getItem('submissionData');
