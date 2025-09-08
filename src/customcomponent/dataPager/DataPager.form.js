@@ -1,7 +1,7 @@
 import { Formio } from "@formio/js";
 
 const baseEditForm = Formio.Components.baseEditForm;
-import DataPagerEditDisplay from "./editForm/DataPager.edit.display.js";
+import DataPagerEditDisplay from "./editForm/DataPager.edit.custom.js";
 
 export default function (...extend) {
 	return baseEditForm(
