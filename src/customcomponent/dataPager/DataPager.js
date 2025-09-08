@@ -36,10 +36,10 @@ export default class DataPager extends Component {
 			Number(this.component.pageLimit) > 0
 				? Number(this.component.pageLimit)
 				: 5;
-		this.totalPagesNum = 1;
 		this.currentPageNum = 1;
-		this.totalItemsNum = 1;
-		this.items = [];
+		this.totalPagesNum = 1;
+		this.totalRowsNum = 1;
+		this.gridRows = [];
 		this.targetComponent = null;
 	}
 
@@ -49,7 +49,7 @@ export default class DataPager extends Component {
 				pageLimit: this.pageLimit,
 				totalPagesNum: this.totalPagesNum,
 				currentPageNum: this.currentPageNum,
-				totalItemsNum: this.totalItemsNum,
+				totalItemsNum: this.totalRowsNum,
 			})
 		);
 	}
@@ -92,7 +92,7 @@ export default class DataPager extends Component {
 
 		// If not found, show zero state and disable buttons
 		if (!this.targetComponent) {
-			this.items = [];
+			this.gridRows = [];
 			this.computeTotals();
 			this.updateUI();
 			this.setButtonsDisabled(true);
@@ -101,7 +101,7 @@ export default class DataPager extends Component {
 
 		// Initialize items from the target's dataValue (make a deep copy)
 		const targetDataValue = this.targetComponent.dataValue;
-		this.items = Array.isArray(targetDataValue)
+		this.gridRows = Array.isArray(targetDataValue)
 			? JSON.parse(JSON.stringify(targetDataValue))
 			: [];
 
@@ -136,7 +136,7 @@ export default class DataPager extends Component {
 
 			const offset = (this.currentPageNum - 1) * this.pageLimit;
 			// Remove the old slice and replace with new
-			this.items.splice(offset, this.pageLimit, ...currentPageData);
+			this.gridRows.splice(offset, this.pageLimit, ...currentPageData);
 
 			// Recompute totals in case rows were added/removed
 			this.computeTotals();
@@ -168,10 +168,12 @@ export default class DataPager extends Component {
 	 * Recalculate totals and clamp current page
 	 */
 	computeTotals() {
-		this.totalItemsNum = Array.isArray(this.items) ? this.items.length : 0;
+		this.totalRowsNum = Array.isArray(this.gridRows)
+			? this.gridRows.length
+			: 0;
 		this.totalPagesNum = Math.max(
 			1,
-			Math.ceil(this.totalItemsNum / this.pageLimit)
+			Math.ceil(this.totalRowsNum / this.pageLimit)
 		);
 		if (this.currentPageNum < 1) this.currentPageNum = 1;
 		if (this.currentPageNum > this.totalPagesNum)
@@ -193,7 +195,7 @@ export default class DataPager extends Component {
 
 		const start = (currentPageNum - 1) * this.pageLimit;
 		const end = start + this.pageLimit;
-		const pageSlice = this.items.slice(start, end);
+		const pageSlice = this.gridRows.slice(start, end);
 
 		// Set the visible rows in the target component.
 		// setValue should exist on formio components; call defensively.
@@ -214,28 +216,28 @@ export default class DataPager extends Component {
 	updateUI() {
 		// First/last item numbers: show 0 when no items
 		const firstNum =
-			this.totalItemsNum === 0
+			this.totalRowsNum === 0
 				? 0
 				: (this.currentPageNum - 1) * this.pageLimit + 1;
 		const lastNum =
-			this.totalItemsNum === 0
+			this.totalRowsNum === 0
 				? 0
-				: Math.min(this.currentPageNum * this.pageLimit, this.totalItemsNum);
+				: Math.min(this.currentPageNum * this.pageLimit, this.totalRowsNum);
 
 		if (this.refs.firstItemNum) this.refs.firstItemNum.innerText = firstNum;
 		if (this.refs.lastItemNum) this.refs.lastItemNum.innerText = lastNum;
 		if (this.refs.totalItemsNum)
-			this.refs.totalItemsNum.innerText = this.totalItemsNum;
+			this.refs.totalItemsNum.innerText = this.totalRowsNum;
 		if (this.refs.currentPageNum)
 			this.refs.currentPageNum.innerText =
-				this.totalItemsNum === 0 ? 0 : this.currentPageNum;
+				this.totalRowsNum === 0 ? 0 : this.currentPageNum;
 		if (this.refs.totalPagesNum)
 			this.refs.totalPagesNum.innerText = this.totalPagesNum;
 
 		// Button enable/disable
-		const onFirst = this.totalItemsNum === 0 || this.currentPageNum === 1;
+		const onFirst = this.totalRowsNum === 0 || this.currentPageNum === 1;
 		const onLast =
-			this.totalItemsNum === 0 || this.currentPageNum === this.totalPagesNum;
+			this.totalRowsNum === 0 || this.currentPageNum === this.totalPagesNum;
 
 		if (this.refs.firstBtn) this.refs.firstBtn.disabled = onFirst;
 		if (this.refs.prevBtn) this.refs.prevBtn.disabled = onFirst;
