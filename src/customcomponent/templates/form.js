@@ -1,11 +1,11 @@
 // You can use  ctx.pageLimit / ctx.totalPagesNum from render()
 // and/or ctx.component.label from schema
-export function dataPagerTemplate(ctx) {
-	const compKey = ctx.component?.key || "dataPager";
-	const label = ctx.component?.label || "Data Pager";
+export function dataGridPagerTemplate(ctx) {
+	const compKey = ctx.component?.key || "dataGridPager";
+	const label = ctx.component?.label || "Data Grid Pager";
 
 	return `
-  <div ref="dataPager" class="datapager-${compKey}" role="navigation" aria-label="${label}" style="border: 3px solid #ddd; padding: 10px; text-align: right;">
+  <div ref="dataGridPager" class="dataGridPager-${compKey}" role="navigation" aria-label="${label}" style="border: 3px solid #ddd; padding: 10px; text-align: right;">
     <div class="pager">
         <div class="nav-controls">
           <span class="items-on-page">

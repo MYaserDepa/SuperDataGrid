@@ -1,17 +1,17 @@
 import { Formio } from "@formio/js";
-import editForm from "./DataPager.form.js";
+import editForm from "./DataGridPager.form.js";
 
 const Component = Formio.Components.components.component;
 
-export default class DataPager extends Component {
+export default class DataGridPager extends Component {
 	static editForm = editForm;
 
 	static schema(...extend) {
 		return Component.schema(
 			{
-				type: "dataPager",
+				type: "dataGridPager",
 				label: "Data Pager",
-				key: "dataPager",
+				key: "dataGridPager",
 				pageLimit: 5,
 				gridToAttach: "",
 			},
@@ -21,11 +21,11 @@ export default class DataPager extends Component {
 
 	static get builderInfo() {
 		return {
-			title: "Data Pager",
+			title: "Data Grid Pager",
 			icon: "list",
 			group: "basic",
 			weight: -100,
-			schema: DataPager.schema(),
+			schema: DataGridPager.schema(),
 		};
 	}
 
@@ -45,7 +45,7 @@ export default class DataPager extends Component {
 
 	render() {
 		return super.render(
-			this.renderTemplate("dataPager", {
+			this.renderTemplate("dataGridPager", {
 				pageLimit: this.pageLimit,
 				totalPagesNum: this.totalPagesNum,
 				currentPageNum: this.currentPageNum,
@@ -75,7 +75,7 @@ export default class DataPager extends Component {
 
 		// Load refs from template
 		this.loadRefs(element, {
-			dataPager: "single",
+			dataGridPager: "single",
 			firstItemNum: "single",
 			lastItemNum: "single",
 			totalItemsNum: "single",

@@ -2,17 +2,17 @@ import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
 import { AppComponent } from './app/app.component';
 import { Formio } from '@formio/angular';
-import dataPager from './customComponent/dataPager/DataPager';
-import { dataPagerTemplate } from './customComponent/templates/form';
+import dataGridPager from './customComponent/dataGridPager/DataGridPager';
+import { dataGridPagerTemplate } from './customComponent/templates/form';
 
 Formio.use({
 	components: {
-		dataPager,
+		dataGridPager,
 	},
 	templates: {
 		bootstrap: {
-			dataPager: {
-				form: dataPagerTemplate,
+			dataGridPager: {
+				form: dataGridPagerTemplate,
 			},
 		},
 	},
