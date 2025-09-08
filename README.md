@@ -1,3 +1,8 @@
+# Tentative Plan
+
+1. Clicking the delete button of the last row of the last page is clearing the result without deleting the whole row
+2. Saving the submission data only saves the page that is currently being viewed by the user and all rows in the remaining pages are removed
+
 # FormioTest
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.15.
