@@ -34,7 +34,16 @@ export class AppComponent implements AfterViewInit {
 
 				// Attach submit listener
 				form.on('submit', (submission: any) => {
-					console.log('Form submitted with data:', submission.data);
+					form.getComponents().forEach((comp: any) => {
+						if (
+							comp.component.type === 'dataPager' &&
+							typeof comp.getAllGridRows === 'function'
+						) {
+							const [allGridRows, targetComponentKey] = comp.getAllGridRows(); // fetch full dataset
+							submission.data[targetComponentKey] = allGridRows;
+						}
+					});
+
 					localStorage.setItem(
 						'submissionData',
 						JSON.stringify(submission.data)
@@ -53,7 +62,16 @@ export class AppComponent implements AfterViewInit {
 		).then((form: any) => {
 			// On form submit in form renderer
 			form.on('submit', (submission: any) => {
-				console.log('Form submitted with data:', submission.data);
+				form.getComponents().forEach((comp: any) => {
+					if (
+						comp.component.type === 'dataPager' &&
+						typeof comp.getAllGridRows === 'function'
+					) {
+						const [allGridRows, targetComponentKey] = comp.getAllGridRows(); // fetch full dataset
+						submission.data[targetComponentKey] = allGridRows;
+					}
+				});
+
 				localStorage.setItem('submissionData', JSON.stringify(submission.data));
 				localStorage.setItem('formBuilderData', JSON.stringify(event.form));
 			});

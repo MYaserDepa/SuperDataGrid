@@ -256,6 +256,14 @@ export default class DataPager extends Component {
 	}
 
 	/**
+	 * Returns the full dataset (all pages) and the target component key
+	 * for external use (e.g. on form submit)
+	 */
+	getAllGridRows() {
+		return [this.allGridRows, this.targetComponent.key];
+	}
+
+	/**
 	 * Cleanup listeners when component is removed
 	 */
 	detach() {
