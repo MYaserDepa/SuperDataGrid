@@ -44,11 +44,11 @@ export class AppComponent implements AfterViewInit {
 						}
 					});
 
-					localStorage.setItem(
-						'submissionData',
-						JSON.stringify(submission.data)
-					);
-					localStorage.setItem('formBuilderData', JSON.stringify(this.form));
+					// localStorage.setItem(
+					// 	'submissionData',
+					// 	JSON.stringify(submission.data)
+					// );
+					// localStorage.setItem('formBuilderData', JSON.stringify(this.form));
 				});
 			});
 		}
@@ -72,8 +72,8 @@ export class AppComponent implements AfterViewInit {
 					}
 				});
 
-				localStorage.setItem('submissionData', JSON.stringify(submission.data));
-				localStorage.setItem('formBuilderData', JSON.stringify(event.form));
+				// localStorage.setItem('submissionData', JSON.stringify(submission.data));
+				// localStorage.setItem('formBuilderData', JSON.stringify(event.form));
 			});
 		});
 	}

@@ -150,13 +150,40 @@ export default class DataPager extends Component {
 			}
 		};
 
+		this._targetDeleteHandler = () => {
+			// read the current visible page rows from the target and merge them back
+			const currentPageData = Array.isArray(this.targetComponent.dataValue)
+				? JSON.parse(JSON.stringify(this.targetComponent.dataValue))
+				: [];
+
+			if (currentPageData.length === 0 && this.currentPageNum > 1) {
+				// If we deleted the last item on this page, move back a page
+				this.currentPageNum--;
+				this.allGridRows.pop();
+			} else {
+				const offset = (this.currentPageNum - 1) * this.pageLimit;
+				// Remove the old slice and replace with new
+				this.allGridRows.splice(offset, this.pageLimit, ...currentPageData);
+			}
+
+			// Recompute totals in case rows were added/removed
+			this.computeTotals();
+
+			this.goToPage(this.currentPageNum);
+		};
+
 		if (typeof this.targetComponent.on === "function") {
 			this.targetComponent.on("change", this._targetChangeHandler);
+			this.targetComponent.on("dataGridDeleteRow", this._targetDeleteHandler);
 		} else if (typeof this.targetComponent.addEventListener === "function") {
 			// fallback (rare)
 			this.targetComponent.addEventListener(
 				"change",
 				this._targetChangeHandler
+			);
+			this.targetComponent.addEventListener(
+				"dataGridDeleteRow",
+				this._targetDeleteHandler
 			);
 		}
 
@@ -279,25 +306,28 @@ export default class DataPager extends Component {
 
 		// remove target change listener
 		if (this.targetComponent) {
-			if (
-				typeof this.targetComponent.off === "function" &&
-				this._targetChangeHandler
-			) {
-				this.targetComponent.off("change", this._targetChangeHandler);
+			if (typeof this.targetComponent.off === "function") {
+				if (this._targetChangeHandler)
+					this.targetComponent.off("change", this._targetChangeHandler);
+				if (this._targetDeleteHandler)
+					this.targetComponent.off(
+						"dataGridDeleteRow",
+						this._targetDeleteHandler
+					);
 			} else if (
-				typeof this.targetComponent.removeEventListener === "function" &&
-				this._targetChangeHandler
+				typeof this.targetComponent.removeEventListener === "function"
 			) {
-				this.targetComponent.removeEventListener(
-					"change",
-					this._targetChangeHandler
-				);
-			} else if (
-				typeof this.targetComponent.on === "function" &&
-				typeof this.targetComponent.off === "undefined" &&
-				this._targetChangeHandler
-			) {
-				// some implementations use on() but not off(); best-effort: no-op
+				if (this._targetChangeHandler)
+					this.targetComponent.removeEventListener(
+						"change",
+						this._targetChangeHandler
+					);
+
+				if (this._targetDeleteHandler)
+					this.targetComponent.removeEventListener(
+						"dataGridDeleteRow",
+						this._targetDeleteHandler
+					);
 			}
 		}
 
