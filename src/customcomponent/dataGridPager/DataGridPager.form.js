@@ -1,7 +1,7 @@
 import { Formio } from "@formio/js";
 
 const baseEditForm = Formio.Components.baseEditForm;
-import DataGridPagerEditDisplay from "./editForm/DataGridPager.edit.custom.js";
+import DataGridPagerEditCustom from "./editForm/DataGridPager.edit.custom.js";
 
 export default function (...extend) {
 	return baseEditForm(
@@ -10,7 +10,7 @@ export default function (...extend) {
 				key: "pager",
 				label: "Pager Settings",
 				weight: 10,
-				components: DataGridPagerEditDisplay,
+				components: DataGridPagerEditCustom,
 			},
 		],
 		...extend

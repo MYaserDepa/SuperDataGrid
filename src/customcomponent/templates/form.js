@@ -31,3 +31,7 @@ export function dataGridPagerTemplate(ctx) {
     </div>
   </div>`;
 }
+
+export function sortAndFilterTemplate(ctx) {
+	return ``;
+}
