@@ -55,22 +55,6 @@ export default class DataGridPager extends Component {
 	}
 
 	/**
-	 * Find the target component by key (searches recursively from root)
-	 */
-	findTargetComponent() {
-		if (!this.root || !this.component?.gridToAttach) return null;
-		try {
-			return this.root.getComponent(this.component.gridToAttach);
-		} catch (e) {
-			console.warn(
-				`Could not find grid component with key: ${this.component.gridToAttach}`,
-				e
-			);
-			return null;
-		}
-	}
-
-	/**
 	 * Called after render; wires refs, finds target component, and initializes UI.
 	 */
 	attach(element) {
@@ -96,6 +80,19 @@ export default class DataGridPager extends Component {
 
 		// If not found, show zero state and disable buttons
 		if (!this.targetComponent) {
+			this.allGridRows = [];
+			this.computeTotals();
+			this.updateUI();
+			this.setButtonsDisabled(true);
+			return;
+		}
+
+		// Verify it's actually a data grid component
+		if (this.targetComponent.component.type !== "datagrid") {
+			console.warn(
+				`DataGridPager: Component "${this.component.gridToAttach}" is not a data grid`
+			);
+
 			this.allGridRows = [];
 			this.computeTotals();
 			this.updateUI();
@@ -193,6 +190,18 @@ export default class DataGridPager extends Component {
 
 		// Show initial page
 		this.goToPage(this.currentPageNum);
+	}
+
+	/**
+	 * Find the target component by key (searches recursively from root)
+	 */
+	findTargetComponent() {
+		if (!this.root || !this.component?.gridToAttach) return null;
+		try {
+			return this.root.getComponent(this.component.gridToAttach);
+		} catch (e) {
+			return null;
+		}
 	}
 
 	/**
