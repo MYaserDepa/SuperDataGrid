@@ -2,10 +2,9 @@
 // and/or ctx.component.label from schema
 export function dataGridPagerTemplate(ctx) {
 	const compKey = ctx.component?.key || "dataGridPager";
-	const label = ctx.component?.label || "Data Grid Pager";
 
 	return `
-  <div ref="dataGridPager" class="dataGridPager-${compKey}" role="navigation" aria-label="${label}" style="border: 3px solid #ddd; padding: 10px; text-align: right;">
+  <div ref="dataGridPager" class="dataGridPager-${compKey}" style="border: 3px solid #ddd; padding: 10px; text-align: right;">
     <div class="pager">
         <div class="nav-controls">
           <span class="items-on-page">
@@ -33,5 +32,18 @@ export function dataGridPagerTemplate(ctx) {
 }
 
 export function sortAndFilterTemplate(ctx) {
-	return ``;
+	const compKey = ctx.component?.key || "sortAndFilter";
+
+	return `
+  <div ref="sortAndFilter" class="sortAndFilter-${compKey}" style="border: 3px solid #ddd; padding: 10px;">
+    <div class="sortAndFilter-controls">
+      <div class="filter-section"> 
+        <input type="text" placeholder="Search in any column..." ref="searchInput" style="padding: 5px; width: 100%; border: 1px solid #ced4da; border-radius: .25rem;" />
+      </div>
+      
+      <div class="sort-section">
+      
+      </div>
+    </div>
+  </div>`;
 }
