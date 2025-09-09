@@ -62,6 +62,10 @@ export default class DataGridPager extends Component {
 		try {
 			return this.root.getComponent(this.component.gridToAttach);
 		} catch (e) {
+			console.warn(
+				`Could not find grid component with key: ${this.component.gridToAttach}`,
+				e
+			);
 			return null;
 		}
 	}
