@@ -203,7 +203,7 @@ export default class DataGridPager extends Component {
 	computeTotals() {
 		this.totalRowsNum = Array.isArray(this.allGridRows)
 			? this.allGridRows.length
-			: 0;
+			: 1;
 		this.totalPagesNum = Math.max(
 			1,
 			Math.ceil(this.totalRowsNum / this.pageLimit)
@@ -247,30 +247,32 @@ export default class DataGridPager extends Component {
 	 * Update the DOM refs for numbers and button disabled states
 	 */
 	updateUI() {
-		// First/last item numbers: show 0 when no items
+		// First/last item numbers: show 1 when no items
 		const firstNum =
-			this.totalRowsNum === 0
-				? 0
+			this.totalRowsNum === 1
+				? 1
 				: (this.currentPageNum - 1) * this.pageLimit + 1;
 		const lastNum =
-			this.totalRowsNum === 0
-				? 0
+			this.totalRowsNum === 1
+				? 1
 				: Math.min(this.currentPageNum * this.pageLimit, this.totalRowsNum);
 
 		if (this.refs.firstItemNum) this.refs.firstItemNum.innerText = firstNum;
-		if (this.refs.lastItemNum) this.refs.lastItemNum.innerText = lastNum;
+		if (this.refs.lastItemNum)
+			this.refs.lastItemNum.innerText = lastNum > 0 ? lastNum : 1;
 		if (this.refs.totalItemsNum)
-			this.refs.totalItemsNum.innerText = this.totalRowsNum;
+			this.refs.totalItemsNum.innerText =
+				this.totalRowsNum > 0 ? this.totalRowsNum : 1;
 		if (this.refs.currentPageNum)
 			this.refs.currentPageNum.innerText =
-				this.totalRowsNum === 0 ? 0 : this.currentPageNum;
+				this.totalRowsNum === 1 ? 1 : this.currentPageNum;
 		if (this.refs.totalPagesNum)
 			this.refs.totalPagesNum.innerText = this.totalPagesNum;
 
 		// Button enable/disable
-		const onFirst = this.totalRowsNum === 0 || this.currentPageNum === 1;
+		const onFirst = this.totalRowsNum === 1 || this.currentPageNum === 1;
 		const onLast =
-			this.totalRowsNum === 0 || this.currentPageNum === this.totalPagesNum;
+			this.totalRowsNum === 1 || this.currentPageNum === this.totalPagesNum;
 
 		if (this.refs.firstBtn) this.refs.firstBtn.disabled = onFirst;
 		if (this.refs.prevBtn) this.refs.prevBtn.disabled = onFirst;
