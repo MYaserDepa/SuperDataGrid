@@ -92,7 +92,7 @@ export default class DataGridPager extends Component {
 			console.warn(
 				`DataGridPager: Component "${this.component.gridToAttach}" is not a data grid`
 			);
-
+			this.refs.dataGridPager.innerHTML = `<div>Error: Attached component is not a data grid</div>`;
 			this.allGridRows = [];
 			this.computeTotals();
 			this.updateUI();
