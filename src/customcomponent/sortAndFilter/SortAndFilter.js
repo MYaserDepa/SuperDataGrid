@@ -190,12 +190,11 @@ export default class SortAndFilter extends Component {
 		const gridComponents = this.targetComponent.component.components || [];
 
 		for (const component of gridComponents) {
-			const fieldKey = component.key;
-			const fieldValue = row[fieldKey];
+			const componentValue = row[component.key];
 
 			// Convert value to string and check if it contains the search term
-			if (fieldValue !== null && fieldValue !== undefined) {
-				const valueStr = String(fieldValue).toLowerCase();
+			if (componentValue !== null && componentValue !== undefined) {
+				const valueStr = String(componentValue).toLowerCase();
 				if (valueStr.includes(searchTerm)) {
 					return true;
 				}
