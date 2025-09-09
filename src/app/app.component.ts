@@ -36,7 +36,8 @@ export class AppComponent implements AfterViewInit {
 				form.on('submit', (submission: any) => {
 					form.getComponents().forEach((comp: any) => {
 						if (
-							comp.component.type === 'dataGridPager' &&
+							(comp.component.type === 'dataGridPager' ||
+								comp.component.type === 'sortAndFilter') &&
 							typeof comp.getAllGridRows === 'function'
 						) {
 							const [allGridRows, targetComponentKey] = comp.getAllGridRows(); // fetch full dataset
@@ -64,7 +65,8 @@ export class AppComponent implements AfterViewInit {
 			form.on('submit', (submission: any) => {
 				form.getComponents().forEach((comp: any) => {
 					if (
-						comp.component.type === 'dataGridPager' &&
+						(comp.component.type === 'dataGridPager' ||
+							comp.component.type === 'sortAndFilter') &&
 						typeof comp.getAllGridRows === 'function'
 					) {
 						const [allGridRows, targetComponentKey] = comp.getAllGridRows(); // fetch full dataset

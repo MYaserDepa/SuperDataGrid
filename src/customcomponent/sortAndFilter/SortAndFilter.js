@@ -32,8 +32,10 @@ export default class SortAndFilter extends Component {
 		super(component, options, data);
 		this.targetComponent = null;
 		this.allGridRows = [];
+		this.filteredGridRows = [];
 		this.searchDebounceTimer = null;
 		this.isFiltering = false;
+		this.currentSearchTerm = "";
 	}
 
 	render() {
@@ -88,26 +90,25 @@ export default class SortAndFilter extends Component {
 				"input",
 				this.handleSearchInput.bind(this)
 			);
-			this.refs.searchInput.addEventListener(
-				"keyup",
-				this.handleSearchInput.bind(this)
-			);
-
-			// Also handle paste events
-			this.refs.searchInput.addEventListener("paste", () => {
-				setTimeout(() => {
-					this.handleSearchInput({ target: this.refs.searchInput });
-				}, 10);
-			});
 		}
 
-		// If the grid already has data, store it
+		// Initialize data storage
+		this.initializeDataStorage();
+	}
+
+	/**
+	 * Initialize data storage - get data from grid
+	 */
+	initializeDataStorage() {
 		if (
 			this.targetComponent.dataValue &&
 			this.targetComponent.dataValue.length > 0
 		) {
 			this.storeAllGridRows();
 		}
+
+		// Initialize filtered rows with all rows
+		this.filteredGridRows = [...this.allGridRows];
 	}
 
 	/**
@@ -132,6 +133,11 @@ export default class SortAndFilter extends Component {
 		this.allGridRows = JSON.parse(
 			JSON.stringify(this.targetComponent.dataValue || [])
 		);
+
+		// Update filtered rows if no filter is active
+		if (!this.currentSearchTerm) {
+			this.filteredGridRows = [...this.allGridRows];
+		}
 	}
 
 	/**
@@ -145,11 +151,15 @@ export default class SortAndFilter extends Component {
 		this.isFiltering = true;
 
 		try {
+			this.currentSearchTerm = searchTerm;
+
 			// If search term is empty, restore original data
 			if (!searchTerm || searchTerm.trim() === "") {
-				console.log("SEARCH EMPTY");
-				console.log(this.allGridRows);
-				this.targetComponent.setValue(this.allGridRows);
+				this.filteredGridRows = [...this.allGridRows];
+
+				// Direct update to grid
+				this.targetComponent.setValue(this.filteredGridRows);
+
 				this.isFiltering = false;
 				return;
 			}
@@ -157,15 +167,12 @@ export default class SortAndFilter extends Component {
 			const searchLower = searchTerm.toLowerCase().trim();
 
 			// Filter the original data
-			const filteredData = this.allGridRows.filter((row) => {
-				// Check if any field in the row contains the search term
+			this.filteredGridRows = this.allGridRows.filter((row) => {
 				return this.searchInRow(row, searchLower);
 			});
 
-			console.log(`FILTERED APPLIED: ${searchTerm}`, filteredData);
-			console.log(this.allGridRows);
-			// Update the grid with filtered data
-			this.targetComponent.setValue(filteredData);
+			// Direct update to grid
+			this.targetComponent.setValue(this.filteredGridRows);
 		} catch (error) {
 			console.error("Error applying filter:", error);
 		} finally {
@@ -224,7 +231,13 @@ export default class SortAndFilter extends Component {
 		// Listen for grid data changes (but not our own changes)
 		this.targetComponent.on("change", (event) => {
 			// Only update original data if we're not currently filtering
-			if (!this.isFiltering && event && event.changed) {
+			// and there's no active search term
+			if (
+				!this.isFiltering &&
+				!this.currentSearchTerm &&
+				event &&
+				event.changed
+			) {
 				// Delay to ensure the grid has updated
 				setTimeout(() => {
 					this.storeAllGridRows();
@@ -232,15 +245,43 @@ export default class SortAndFilter extends Component {
 			}
 		});
 
-		// Listen for grid redraw events
-		this.targetComponent.on("redraw", () => {
+		// Listen for row additions (if grid supports it)
+		this.targetComponent.on("dataGridAddRow", () => {
 			if (!this.isFiltering) {
-				this.storeAllGridRows();
+				setTimeout(() => {
+					// Get updated data
+					this.storeAllGridRows();
+					// Reapply filter if active
+					if (this.currentSearchTerm) {
+						this.applyFilter(this.currentSearchTerm);
+					}
+				}, 100);
+			}
+		});
+
+		// Listen for row deletions
+		this.targetComponent.on("dataGridDeleteRow", () => {
+			if (!this.isFiltering) {
+				setTimeout(() => {
+					// Get updated data
+					this.storeAllGridRows();
+					// Reapply filter if active
+					if (this.currentSearchTerm) {
+						this.applyFilter(this.currentSearchTerm);
+					}
+				}, 100);
 			}
 		});
 
 		// Store initial data
 		this.storeAllGridRows();
+	}
+
+	/**
+	 * Get all rows (used by other components if needed)
+	 */
+	getAllRows() {
+		return [this.allGridRows, this.targetComponent.key];
 	}
 
 	/**
@@ -258,26 +299,15 @@ export default class SortAndFilter extends Component {
 				"input",
 				this.handleSearchInput.bind(this)
 			);
-			this.refs.searchInput.removeEventListener(
-				"keyup",
-				this.handleSearchInput.bind(this)
-			);
-			this.refs.searchInput.removeEventListener(
-				"paste",
-				this.handleSearchInput.bind(this)
-			);
 		}
 
 		// Remove grid listeners
 		if (this.targetComponent) {
 			this.targetComponent.off("change");
 			this.targetComponent.off("redraw");
+			this.targetComponent.off("dataGridAddRow");
+			this.targetComponent.off("dataGridDeleteRow");
 		}
-
-		// Clear references
-		this.targetComponent = null;
-		this.allGridRows = [];
-		this.isFiltering = false;
 
 		return super.detach();
 	}
