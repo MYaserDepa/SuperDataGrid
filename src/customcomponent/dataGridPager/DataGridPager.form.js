@@ -7,7 +7,7 @@ export default function (...extend) {
 	return baseEditForm(
 		[
 			{
-				key: "pager",
+				key: "pagerSettings",
 				label: "Pager Settings",
 				weight: 10,
 				components: DataGridPagerEditCustom,
