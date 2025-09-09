@@ -44,14 +44,7 @@ export default class DataGridPager extends Component {
 	}
 
 	render() {
-		return super.render(
-			this.renderTemplate("dataGridPager", {
-				pageLimit: this.pageLimit,
-				totalPagesNum: this.totalPagesNum,
-				currentPageNum: this.currentPageNum,
-				totalItemsNum: this.totalRowsNum,
-			})
-		);
+		return super.render(this.renderTemplate("dataGridPager"));
 	}
 
 	/**
