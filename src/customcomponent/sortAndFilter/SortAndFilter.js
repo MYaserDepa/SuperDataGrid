@@ -36,7 +36,7 @@ export default class SortAndFilter extends Component {
 		this.searchDebounceTimer = null;
 		this.isFiltering = false;
 		this.currentSearchTerm = "";
-		this.sortColumnKey = ""; // currently selected column key
+		this.selectedSortColumnKey = "";
 		this.sortOrderAsc = true; // true = ascending, false = descending
 	}
 
@@ -102,7 +102,7 @@ export default class SortAndFilter extends Component {
 		// Add listeners for sorting
 		if (this.refs.sortColumn) {
 			this.refs.sortColumn.addEventListener("change", (e) => {
-				this.sortColumnKey = e.target.value;
+				this.selectedSortColumnKey = e.target.value;
 				this.applySort();
 			});
 		}
@@ -162,7 +162,7 @@ export default class SortAndFilter extends Component {
 
 	// Apply sorting
 	applySort() {
-		if (!this.targetComponent || !this.sortColumnKey) return;
+		if (!this.targetComponent || !this.selectedSortColumnKey) return;
 
 		// Choose array to sort: filtered if search active, else all
 		const dataToSort = this.currentSearchTerm
@@ -171,8 +171,8 @@ export default class SortAndFilter extends Component {
 
 		// Sort function
 		dataToSort.sort((a, b) => {
-			const valA = a[this.sortColumnKey];
-			const valB = b[this.sortColumnKey];
+			const valA = a[this.selectedSortColumnKey];
+			const valB = b[this.selectedSortColumnKey];
 
 			if (valA === valB) return 0;
 			if (valA === null || valA === undefined) return 1;
@@ -359,9 +359,7 @@ export default class SortAndFilter extends Component {
 					// Get updated data
 					this.storeAllGridRows();
 					// Reapply filter if active
-					if (this.currentSearchTerm) {
-						this.applyFilter(this.currentSearchTerm);
-					}
+					if (this.currentSearchTerm) this.applyFilter(this.currentSearchTerm);
 				}, 100);
 			}
 		});
@@ -373,9 +371,7 @@ export default class SortAndFilter extends Component {
 					// Get updated data
 					this.storeAllGridRows();
 					// Reapply filter if active
-					if (this.currentSearchTerm) {
-						this.applyFilter(this.currentSearchTerm);
-					}
+					if (this.currentSearchTerm) this.applyFilter(this.currentSearchTerm);
 				}, 100);
 			}
 		});
