@@ -35,7 +35,7 @@ export function sortAndFilterTemplate(ctx) {
 	const compKey = ctx.component?.key || "sortAndFilter";
 
 	return `
-  <div ref="sortAndFilter" class="sortAndFilter-${compKey}" style="border: 3px solid #ddd; padding: 10px; border-radius: .5rem; overflow-x: auto;">
+  <div ref="sortAndFilter" class="sortAndFilter-${compKey}" style="border: 3px solid #ddd; padding: 10px; overflow-x: auto;">
     <div class="sortAndFilter-controls" style="display: flex; flex-wrap: nowrap; gap: 20px; align-items: flex-start; min-width: 520px;">
       
       <div class="filter-section" style="flex: 1;">

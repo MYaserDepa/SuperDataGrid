@@ -36,6 +36,8 @@ export default class SortAndFilter extends Component {
 		this.searchDebounceTimer = null;
 		this.isFiltering = false;
 		this.currentSearchTerm = "";
+		this.sortColumnKey = ""; // currently selected column key
+		this.sortOrderAsc = true; // true = ascending, false = descending
 	}
 
 	render() {
@@ -52,6 +54,8 @@ export default class SortAndFilter extends Component {
 		// Load refs from template
 		this.loadRefs(element, {
 			searchInput: "single",
+			sortColumn: "single",
+			sortOrderBtn: "single",
 		});
 
 		// Locate the data grid to attach to
@@ -92,8 +96,84 @@ export default class SortAndFilter extends Component {
 			);
 		}
 
+		// Populate sort column dropdown
+		this.populateSortColumns();
+
+		// Add listeners for sorting
+		if (this.refs.sortColumn) {
+			this.refs.sortColumn.addEventListener("change", (e) => {
+				this.sortColumnKey = e.target.value;
+				this.applySort();
+			});
+		}
+		if (this.refs.sortOrderBtn) {
+			this.refs.sortOrderBtn.addEventListener("click", () => {
+				this.sortOrderAsc = !this.sortOrderAsc;
+				if (this.refs.sortOrderBtn) {
+					this.refs.sortOrderBtn.textContent = this.sortOrderAsc
+						? "Asc"
+						: "Desc";
+				}
+				this.applySort();
+			});
+		}
+
 		// Initialize data storage
 		this.initializeDataStorage();
+	}
+
+	// Populate sort columns dropdown
+	populateSortColumns() {
+		if (!this.targetComponent || !this.refs.sortColumn) return;
+
+		const gridComponents = this.targetComponent.component.components || [];
+		const select = this.refs.sortColumn;
+
+		// Clear existing options except placeholder
+		select.innerHTML = '<option value="">-- Select column to sort --</option>';
+
+		gridComponents.forEach((col) => {
+			const opt = document.createElement("option");
+			opt.value = col.key;
+			opt.textContent = col.label || col.key;
+			select.appendChild(opt);
+		});
+	}
+
+	// Apply sorting
+	applySort() {
+		if (!this.targetComponent || !this.sortColumnKey) return;
+
+		// Choose array to sort: filtered if search active, else all
+		const dataToSort = this.currentSearchTerm
+			? [...this.filteredGridRows]
+			: [...this.allGridRows];
+
+		// Sort function
+		dataToSort.sort((a, b) => {
+			const valA = a[this.sortColumnKey];
+			const valB = b[this.sortColumnKey];
+
+			if (valA === valB) return 0;
+			if (valA === null || valA === undefined) return 1;
+			if (valB === null || valB === undefined) return -1;
+
+			if (typeof valA === "string" && typeof valB === "string") {
+				return this.sortOrderAsc
+					? valA.localeCompare(valB)
+					: valB.localeCompare(valA);
+			} else {
+				return this.sortOrderAsc ? valA - valB : valB - valA;
+			}
+		}); // Update grid
+		this.targetComponent.setValue(dataToSort, { modified: false });
+
+		// Keep filteredGridRows updated
+		if (this.currentSearchTerm) {
+			this.filteredGridRows = dataToSort;
+		} else {
+			this.allGridRows = dataToSort;
+		}
 	}
 
 	/**
@@ -172,6 +252,14 @@ export default class SortAndFilter extends Component {
 			});
 
 			// Direct update to grid
+			this.targetComponent.setValue(this.filteredGridRows);
+
+			this.filteredGridRows = this.allGridRows.filter((row) =>
+				this.searchInRow(row, searchLower)
+			);
+
+			// Apply sort after filtering
+			this.applySort();
 			this.targetComponent.setValue(this.filteredGridRows);
 		} catch (error) {
 			console.error("Error applying filter:", error);
