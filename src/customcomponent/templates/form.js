@@ -35,14 +35,25 @@ export function sortAndFilterTemplate(ctx) {
 	const compKey = ctx.component?.key || "sortAndFilter";
 
 	return `
-  <div ref="sortAndFilter" class="sortAndFilter-${compKey}" style="border: 3px solid #ddd; padding: 10px;">
-    <div class="sortAndFilter-controls">
-      <div class="filter-section"> 
+  <div ref="sortAndFilter" class="sortAndFilter-${compKey}" style="border: 3px solid #ddd; padding: 10px; border-radius: .5rem;">
+    <div class="sortAndFilter-controls" style="display: flex; justify-content: space-between; gap: 20px; align-items: flex-start;">
+      
+      <div class="filter-section" style="flex: 1;">
+        <label style="display:block; font-weight: 600; margin-bottom: 5px;">Filter</label>
         <input type="text" placeholder="Search in any column..." ref="searchInput" style="padding: 5px; width: 100%; border: 1px solid #ced4da; border-radius: .25rem;" />
       </div>
       
-      <div class="sort-section">
-      
+      <!-- Sort Section -->
+      <div class="sort-section" style="flex: 1;">
+        <label style="display:block; font-weight: 600; margin-bottom: 5px;">Sort</label>
+        <div style="display: flex; align-items: center;">
+          <select ref="sortColumn" style="padding: 5px; flex: 1; border: 1px solid #ced4da; border-radius: .25rem;">
+            <option value="">-- Select column to sort --</option>
+          </select>
+          <button type="button" ref="sortOrderBtn" style="padding: 5px 10px; margin-left: 5px; border: 1px solid #ced4da; border-radius: .25rem; cursor: pointer;">
+            Asc
+          </button>
+        </div>
       </div>
     </div>
   </div>`;
