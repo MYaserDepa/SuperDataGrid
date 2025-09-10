@@ -122,9 +122,27 @@ export default class SortAndFilter extends Component {
 		this.initializeDataStorage();
 	}
 
-	// Populate sort columns dropdown
 	populateSortColumns() {
 		if (!this.targetComponent || !this.refs.sortColumn) return;
+
+		const allowedTypes = [
+			"textfield",
+			"textarea",
+			"number",
+			"checkbox",
+			"selectboxes",
+			"select",
+			"radio",
+			"email",
+			"url",
+			"phoneNumber",
+			"tags",
+			"address",
+			"datetime",
+			"day",
+			"time",
+			"currency",
+		];
 
 		const gridComponents = this.targetComponent.component.components || [];
 		const select = this.refs.sortColumn;
@@ -133,10 +151,12 @@ export default class SortAndFilter extends Component {
 		select.innerHTML = '<option value="">-- Select column to sort --</option>';
 
 		gridComponents.forEach((col) => {
-			const opt = document.createElement("option");
-			opt.value = col.key;
-			opt.textContent = col.label || col.key;
-			select.appendChild(opt);
+			if (allowedTypes.includes(col.type)) {
+				const opt = document.createElement("option");
+				opt.value = col.key;
+				opt.textContent = col.label || col.key;
+				select.appendChild(opt);
+			}
 		});
 	}
 
