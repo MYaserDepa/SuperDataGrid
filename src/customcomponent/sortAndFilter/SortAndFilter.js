@@ -174,18 +174,33 @@ export default class SortAndFilter extends Component {
 			const valA = a[this.selectedSortColumnKey];
 			const valB = b[this.selectedSortColumnKey];
 
+			// Handle equality
 			if (valA === valB) return 0;
+
+			// Handle null/undefined
 			if (valA === null || valA === undefined) return 1;
 			if (valB === null || valB === undefined) return -1;
 
-			if (typeof valA === "string" && typeof valB === "string") {
-				return this.sortOrderAsc
-					? valA.localeCompare(valB)
-					: valB.localeCompare(valA);
+			// Convert to numbers if possible
+			const numA = Number(valA);
+			const numB = Number(valB);
+
+			if (!isNaN(numA) && !isNaN(numB)) {
+				// Numeric comparison
+				return this.sortOrderAsc ? numA - numB : numB - numA;
 			} else {
-				return this.sortOrderAsc ? valA - valB : valB - valA;
+				// Fallback: plain string comparison
+				return this.sortOrderAsc
+					? String(valA) < String(valB)
+						? -1
+						: 1
+					: String(valB) < String(valA)
+					? -1
+					: 1;
 			}
-		}); // Update grid
+		});
+
+		// Update grid
 		this.targetComponent.setValue(dataToSort, { modified: false });
 
 		// Keep filteredGridRows updated
