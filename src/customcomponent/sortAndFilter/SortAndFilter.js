@@ -398,7 +398,7 @@ export default class SortAndFilter extends Component {
 	/**
 	 * Get all rows (used by other components if needed)
 	 */
-	getAllRows() {
+	getAllGridRows() {
 		return [this.allGridRows, this.targetComponent.key];
 	}
 
