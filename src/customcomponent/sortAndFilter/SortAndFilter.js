@@ -67,6 +67,8 @@ export default class SortAndFilter extends Component {
 				this.refs.searchInput.disabled = true;
 				this.refs.searchInput.placeholder =
 					"No grid attached - configure in component settings";
+				this.refs.sortColumn.disabled = true;
+				this.refs.sortOrderBtn.disabled = true;
 			}
 			return;
 		}
