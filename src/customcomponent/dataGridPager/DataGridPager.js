@@ -99,7 +99,7 @@ export default class DataGridPager extends Component {
 			? JSON.parse(JSON.stringify(targetDataValue))
 			: [];
 
-		// Ensure pageLimit number is up-to-date from schema (in case builder changed it)
+		// Ensure pageLimit number is up-to-date from schema (incase builder changed it)
 		this.pageLimit = Number(this.component.pageLimit || this.pageLimit);
 
 		// Compute totals and clamp current page
@@ -290,15 +290,12 @@ export default class DataGridPager extends Component {
 		if (this.refs.lastBtn) this.refs.lastBtn.disabled = disabled;
 	}
 
-	setValue(value, flags) {
-		// Always expect an array of rows
-		this.dataValue = Array.isArray(value) ? value : [];
-		this.allGridRows = this.dataValue; // keep internal cache
-		return super.setValue(this.dataValue, flags);
-	}
-
-	getValue() {
-		return this.dataValue;
+	/**
+	 * Returns the full dataset (all pages) and the target component key
+	 * for external use (e.g. on form submit)
+	 */
+	getAllGridRows() {
+		return [this.allGridRows, this.targetComponent.key];
 	}
 
 	/**
