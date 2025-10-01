@@ -4,7 +4,7 @@ export default [
 		key: "pageLimit",
 		label: "Maximum Page Size",
 		input: true,
-		defaultValue: 5,
+		defaultValue: 3,
 		decimalLimit: 0, // no decimals
 		validate: {
 			min: 1,
