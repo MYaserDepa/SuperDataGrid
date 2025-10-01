@@ -99,7 +99,7 @@ export default class DataGridPager extends Component {
 			? JSON.parse(JSON.stringify(targetDataValue))
 			: [];
 
-		// Ensure pageLimit number is up-to-date from schema (incase builder changed it)
+		// Ensure pageLimit number is up-to-date from schema (in case builder changed it)
 		this.pageLimit = Number(this.component.pageLimit || this.pageLimit);
 
 		// Compute totals and clamp current page
