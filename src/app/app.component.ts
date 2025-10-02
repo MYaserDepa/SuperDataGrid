@@ -28,28 +28,22 @@ export class AppComponent implements AfterViewInit {
 			).then((form: any) => {
 				// Load previous submission
 				const submissionData = localStorage.getItem('submissionData');
-				if (submissionData) {
-					form.submission = { data: JSON.parse(submissionData) };
-				}
+				if (submissionData) form.submission = { data: JSON.parse(submissionData) };
 
 				// Attach submit listener
 				form.on('submit', (submission: any) => {
 					form.getComponents().forEach((comp: any) => {
-						if (
-							(comp.component.type === 'dataGridPager' ||
-								comp.component.type === 'sortAndFilter') &&
-							typeof comp.getAllGridRows === 'function'
-						) {
+						if (comp.component.type === 'dataGridPlus' && typeof comp.getAllGridRows === 'function') {
 							const [allGridRows, targetComponentKey] = comp.getAllGridRows(); // fetch full dataset
 							submission.data[targetComponentKey] = allGridRows;
 						}
 					});
 
-					// localStorage.setItem(
-					// 	'submissionData',
-					// 	JSON.stringify(submission.data)
-					// );
-					// localStorage.setItem('formBuilderData', JSON.stringify(this.form));
+					localStorage.setItem(
+						'submissionData',
+						JSON.stringify(submission.data)
+					);
+					localStorage.setItem('formBuilderData', JSON.stringify(this.form));
 				});
 			});
 		}
@@ -64,18 +58,14 @@ export class AppComponent implements AfterViewInit {
 			// On form submit in form renderer
 			form.on('submit', (submission: any) => {
 				form.getComponents().forEach((comp: any) => {
-					if (
-						(comp.component.type === 'dataGridPager' ||
-							comp.component.type === 'sortAndFilter') &&
-						typeof comp.getAllGridRows === 'function'
-					) {
+					if (comp.component.type === 'dataGridPlus' && typeof comp.getAllGridRows === 'function') {
 						const [allGridRows, targetComponentKey] = comp.getAllGridRows(); // fetch full dataset
 						submission.data[targetComponentKey] = allGridRows;
 					}
 				});
 
-				// localStorage.setItem('submissionData', JSON.stringify(submission.data));
-				// localStorage.setItem('formBuilderData', JSON.stringify(event.form));
+				localStorage.setItem('submissionData', JSON.stringify(submission.data));
+				localStorage.setItem('formBuilderData', JSON.stringify(event.form));
 			});
 		});
 	}
