@@ -35,7 +35,7 @@ export default class DataGridPager extends Component {
 		this.pageLimit =
 			Number(this.component.pageLimit) > 0
 				? Number(this.component.pageLimit)
-				: 5;
+				: 3;
 		this.currentPageNum = 1;
 		this.totalPagesNum = 1;
 		this.totalRowsNum = 1;
