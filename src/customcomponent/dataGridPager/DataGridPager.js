@@ -93,15 +93,6 @@ export default class DataGridPager extends Component {
 			return;
 		}
 
-		// Initialize items from the target's dataValue (make a deep copy)
-		const targetDataValue = this.targetComponent.dataValue;
-		this.allGridRows = Array.isArray(targetDataValue)
-			? JSON.parse(JSON.stringify(targetDataValue))
-			: [];
-
-		// Ensure pageLimit number is up-to-date from schema (in case builder changed it)
-		this.pageLimit = Number(this.component.pageLimit || this.pageLimit);
-
 		// Compute totals and clamp current page
 		this.computeTotals();
 
