@@ -64,6 +64,7 @@ export default class DataGridPlus extends Component {
 
 		// Load refs from template
 		this.loadRefs(element, {
+			targetComponentTitle: "single",
 			dataGridPager: "single",
 			firstItemNum: "single",
 			lastItemNum: "single",
@@ -117,6 +118,16 @@ export default class DataGridPlus extends Component {
 			this.updateUI();
 			this.setButtonsDisabled(true);
 			return;
+		}
+
+		// Hide target component's title and show it above DataGridPlus instead + remove the spacing between DataGridPlus and DataGrid attached to it
+		if (this.refs.targetComponentTitle) {
+			this.targetComponent.component.hideLabel = true;
+			this.refs.targetComponentTitle.innerHTML = `<b>${this.targetComponent.component.title ?? this.targetComponent.component.label}</b`;
+			let elements = document.querySelectorAll(`.formio-component-${this.component.key}`);
+			elements.forEach(el => {
+				el.style.marginBottom = '0';
+			});
 		}
 
 		// Initialize data storage
@@ -364,8 +375,8 @@ export default class DataGridPlus extends Component {
 						? -1
 						: 1
 					: String(valB) < String(valA)
-					? -1
-					: 1;
+						? -1
+						: 1;
 			}
 		});
 
@@ -453,8 +464,8 @@ export default class DataGridPlus extends Component {
 						? -1
 						: 1
 					: String(valB) < String(valA)
-					? -1
-					: 1;
+						? -1
+						: 1;
 			}
 		});
 	}
